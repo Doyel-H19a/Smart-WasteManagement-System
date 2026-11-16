@@ -1,0 +1,39 @@
+{% extends "public_base.html" %}
+
+{% block title %}Login – SwachhAI{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-5">
+        <div class="auth-card">
+          <div class="text-center mb-4">
+            <div class="icon-circle mx-auto mb-2"><i class="bi bi-box-arrow-in-right"></i></div>
+            <h1 class="h4 fw-bold mb-1">Welcome back</h1>
+            <p class="text-muted small mb-0">Log in to your SwachhAI account</p>
+          </div>
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+            </div>
+          {% endif %}
+
+          <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+            {% include "partials/form_field.html" with field=form.username %}
+            {% include "partials/form_field.html" with field=form.password %}
+            <button type="submit" class="btn btn-primary w-100 mt-2">Login</button>
+          </form>
+
+          <p class="text-center small mt-3 mb-0">
+            New to SwachhAI? <a href="{% url 'accounts:register' %}">Create an account</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

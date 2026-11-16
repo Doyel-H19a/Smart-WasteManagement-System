@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block body %}
+<nav class="navbar navbar-expand-lg navbar-dark navbar-sa sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="{% url 'home' %}"><i class="bi bi-recycle"></i> SwachhAI</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#publicNav" aria-controls="publicNav"
+            aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="publicNav">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link" href="{% url 'home' %}#features">Features</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'home' %}#roles">Roles</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'home' %}#workflow">How it works</a></li>
+      </ul>
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        {% if user.is_authenticated %}
+          <a class="btn btn-light btn-sm" href="{% url 'accounts:dashboard' %}">
+            <i class="bi bi-speedometer2"></i> Dashboard
+          </a>
+          <form method="post" action="{% url 'accounts:logout' %}" class="m-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+          </form>
+        {% else %}
+          <a class="btn btn-outline-light btn-sm" href="{% url 'accounts:login' %}">Login</a>
+          <a class="btn btn-light btn-sm" href="{% url 'accounts:register' %}">Register</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main>
+  {% if messages %}
+    <div class="container pt-3">{% include "partials/messages.html" %}</div>
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="footer-sa">
+  <div class="container d-flex flex-column flex-md-row justify-content-between gap-2">
+    <span><i class="bi bi-recycle"></i> SwachhAI – Smart Waste Management &amp; Monitoring System</span>
+    <span>&copy; {% now "Y" %} SwachhAI</span>
+  </div>
+</footer>
+{% endblock %}

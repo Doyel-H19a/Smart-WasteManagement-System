@@ -1,0 +1,7 @@
+{% for message in messages %}
+  <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show"
+       role="alert"{% if message.level_tag != 'danger' %} data-auto-dismiss{% endif %}>
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+{% endfor %}

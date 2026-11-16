@@ -1,0 +1,44 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}My Profile – SwachhAI{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card-sa p-4 text-center">
+      {% if user.profile_image %}
+        <img src="{{ user.profile_image.url }}" alt="Profile photo" class="avatar avatar-lg mb-3">
+      {% else %}
+        <span class="avatar-initials avatar-lg mb-3">{{ user.username|slice:":1"|upper }}</span>
+      {% endif %}
+      <h2 class="h5 mb-1">{{ user.display_name }}</h2>
+      <p class="text-muted small mb-2">@{{ user.username }}</p>
+      <span class="badge bg-success">{{ user.get_role_display }}</span>
+      <hr>
+      <p class="small text-muted mb-0">Member since {{ user.date_joined|date:"d M Y" }}</p>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card-sa p-4">
+      <h2 class="h5 mb-3">Edit Profile</h2>
+      <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <div class="row">
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.first_name %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.last_name %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.email %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.phone_number %}</div>
+          <div class="col-12">{% include "partials/form_field.html" with field=form.address %}</div>
+          <div class="col-12">{% include "partials/form_field.html" with field=form.profile_image %}</div>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle"></i> Save Changes</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

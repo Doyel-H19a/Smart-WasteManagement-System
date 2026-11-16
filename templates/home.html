@@ -1,0 +1,79 @@
+{% extends "public_base.html" %}
+
+{% block title %}SwachhAI – Smart Waste Management &amp; Monitoring{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-8">
+        <span class="badge bg-light text-success mb-3">Smart City · Clean Environment</span>
+        <h1 class="mb-3">Smarter waste management for cleaner, healthier cities.</h1>
+        <p class="lead mb-4">
+          SwachhAI connects citizens, workers, municipal teams and health officers
+          on one platform to report, assign, resolve and monitor waste issues.
+        </p>
+        <div class="d-flex flex-wrap gap-2">
+          {% if user.is_authenticated %}
+            <a href="{% url 'accounts:dashboard' %}" class="btn btn-light btn-lg">Go to Dashboard</a>
+          {% else %}
+            <a href="{% url 'accounts:register' %}" class="btn btn-light btn-lg">Get Started</a>
+            <a href="{% url 'accounts:login' %}" class="btn btn-outline-light btn-lg">Login</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="features">
+  <div class="container">
+    <h2 class="section-title text-center mb-2">Platform Modules</h2>
+    <p class="text-center text-muted mb-5">Everything needed to run waste operations in one place.</p>
+    <div class="row g-4">
+      {% for f in features %}
+        <div class="col-sm-6 col-lg-3">
+          <div class="feature-card">
+            <div class="icon-circle mb-3"><i class="bi {{ f.icon }}"></i></div>
+            <h3 class="h6 fw-bold">{{ f.title }}</h3>
+            <p class="small text-muted mb-0">{{ f.text }}</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section bg-white" id="roles">
+  <div class="container">
+    <h2 class="section-title text-center mb-2">Eight Roles, One Connected System</h2>
+    <p class="text-center text-muted mb-5">Each role has its own dashboard, navigation and permissions.</p>
+    <div class="row g-4">
+      {% for r in roles %}
+        <div class="col-sm-6 col-lg-3">
+          <div class="role-card">
+            <div class="icon-circle mb-3"><i class="bi {{ r.icon }}"></i></div>
+            <h3 class="h6 fw-bold">{{ r.label }}</h3>
+            <p class="small text-muted mb-0">{{ r.text }}</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section" id="workflow">
+  <div class="container">
+    <h2 class="section-title text-center mb-5">How a Complaint Gets Resolved</h2>
+    <div class="row g-4 text-center">
+      {% for step in workflow_steps %}
+        <div class="col-6 col-md-4 col-lg-2">
+          <div class="step-number">{{ forloop.counter }}</div>
+          <h3 class="h6 fw-bold">{{ step.title }}</h3>
+          <p class="small text-muted">{{ step.text }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}
