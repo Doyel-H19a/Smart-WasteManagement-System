@@ -1,0 +1,45 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Ward Management – SwachhAI{% endblock %}
+{% block page_title %}Ward Management{% endblock %}
+
+{% block content %}
+<div class="card-sa p-3 p-md-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <p class="text-muted small mb-0">{{ wards|length }} ward(s)</p>
+    <a href="{% url 'waste_management:ward_create' %}" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i> Add Ward
+    </a>
+  </div>
+
+  {% if wards %}
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead class="table-light">
+          <tr><th>No.</th><th>Name</th><th>Zone</th><th>Population</th><th>Complaints</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for ward in wards %}
+            <tr>
+              <td>{{ ward.ward_number }}</td>
+              <td>{{ ward.name }}</td>
+              <td>{{ ward.zone|default:"–" }}</td>
+              <td>{{ ward.population|default_if_none:"–" }}</td>
+              <td>{{ ward.complaint_count }}</td>
+              <td>
+                {% if ward.is_active %}<span class="badge bg-success">Active</span>
+                {% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}
+              </td>
+              <td class="text-end">
+                <a href="{% url 'waste_management:ward_update' ward.pk %}" class="btn btn-outline-primary btn-sm">Edit</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-muted mb-0">No wards yet. Add one, or run <code>python manage.py seed_demo_wards</code>.</p>
+  {% endif %}
+</div>
+{% endblock %}

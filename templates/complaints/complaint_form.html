@@ -1,0 +1,106 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Report a Complaint – SwachhAI{% endblock %}
+{% block page_title %}Report a Complaint{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-9">
+    <div class="card-sa p-4">
+      <p class="text-muted small">
+        Tell us about the waste problem. A Municipal Admin will review your complaint and assign a worker.
+      </p>
+
+      <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="row">
+          <div class="col-md-8">{% include "partials/form_field.html" with field=form.title %}</div>
+          <div class="col-md-4">{% include "partials/form_field.html" with field=form.category %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.ward %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.address %}</div>
+          <div class="col-12">{% include "partials/form_field.html" with field=form.description %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.latitude %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.longitude %}</div>
+        </div>
+
+        <div class="mb-3">
+          <button type="button" class="btn btn-outline-primary btn-sm" id="useLocation">
+            <i class="bi bi-geo-alt"></i> Use my current location
+          </button>
+          <span class="small text-muted ms-2" id="locationStatus" aria-live="polite"></span>
+        </div>
+
+        {% include "partials/form_field.html" with field=form.image %}
+        <img id="imagePreview" class="img-fluid rounded border d-none mb-3" style="max-height: 200px;" alt="Selected image preview">
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Submit Complaint</button>
+          <a href="{% url 'complaints:list' %}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  "use strict";
+
+  // "Use my current location" button (works on localhost and HTTPS)
+  var button = document.getElementById("useLocation");
+  var lat = document.getElementById("id_latitude");
+  var lon = document.getElementById("id_longitude");
+  var status = document.getElementById("locationStatus");
+
+  if (button) {
+    if (!navigator.geolocation) {
+      button.disabled = true;
+      status.textContent = "Location is not supported by this browser.";
+    } else {
+      button.addEventListener("click", function () {
+        status.textContent = "Getting your location…";
+        navigator.geolocation.getCurrentPosition(
+          function (position) {
+            lat.value = position.coords.latitude.toFixed(6);
+            lon.value = position.coords.longitude.toFixed(6);
+            status.textContent = "Location added.";
+          },
+          function () {
+            status.textContent = "Could not get your location. You can leave these fields empty.";
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      });
+    }
+  }
+
+  // Image preview and client-side size check (5 MB)
+  var input = document.getElementById("id_image");
+  var preview = document.getElementById("imagePreview");
+  if (input && preview) {
+    input.addEventListener("change", function () {
+      var file = input.files[0];
+      if (!file) {
+        preview.classList.add("d-none");
+        input.setCustomValidity("");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        input.setCustomValidity("Image must be 5 MB or smaller.");
+        input.reportValidity();
+      } else {
+        input.setCustomValidity("");
+      }
+      preview.src = URL.createObjectURL(file);
+      preview.classList.remove("d-none");
+    });
+  }
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}{{ complaint.reference }} – SwachhAI{% endblock %}
+{% block page_title %}Complaint {{ complaint.reference }}{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+  <a href="{% if is_owner %}{% url 'complaints:list' %}{% else %}{% url 'accounts:dashboard' %}{% endif %}"
+     class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card-sa p-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+        <h2 class="h4 mb-0">{{ complaint.title }}</h2>
+        {% include "complaints/_status_badge.html" %}
+      </div>
+
+      <dl class="row small mb-3">
+        <dt class="col-sm-3">Category</dt><dd class="col-sm-9">{{ complaint.get_category_display }}</dd>
+        <dt class="col-sm-3">Ward</dt><dd class="col-sm-9">{{ complaint.ward }}</dd>
+        <dt class="col-sm-3">Location</dt><dd class="col-sm-9">{{ complaint.address }}</dd>
+        {% if complaint.latitude and complaint.longitude %}
+          <dt class="col-sm-3">Coordinates</dt>
+          <dd class="col-sm-9">
+            {{ complaint.latitude }}, {{ complaint.longitude }}
+            &middot;
+            <a href="https://www.openstreetmap.org/?mlat={{ complaint.latitude }}&amp;mlon={{ complaint.longitude }}#map=17/{{ complaint.latitude }}/{{ complaint.longitude }}"
+               target="_blank" rel="noopener noreferrer">View on OpenStreetMap</a>
+          </dd>
+        {% endif %}
+        <dt class="col-sm-3">Priority</dt><dd class="col-sm-9">{{ complaint.get_priority_display }}</dd>
+        {% if not is_owner %}
+          <dt class="col-sm-3">Reported by</dt>
+          <dd class="col-sm-9">{{ complaint.citizen.display_name }} ({{ complaint.citizen.phone_number|default:"no phone" }})</dd>
+        {% endif %}
+        <dt class="col-sm-3">Submitted on</dt><dd class="col-sm-9">{{ complaint.created_at|date:"d M Y, H:i" }}</dd>
+      </dl>
+
+      <h3 class="h6 fw-bold">Description</h3>
+      <p>{{ complaint.description|linebreaksbr }}</p>
+
+      {% if complaint.image %}
+        <h3 class="h6 fw-bold">Photo</h3>
+        <img src="{{ complaint.image.url }}" class="img-fluid rounded border"
+             style="max-height: 420px;" alt="Photo attached to complaint {{ complaint.reference }}">
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card-sa p-4">
+      <h3 class="h6 fw-bold mb-3"><i class="bi bi-clock-history text-sa"></i> Status timeline</h3>
+      <ul class="list-group list-group-flush">
+        {% for entry in history %}
+          <li class="list-group-item px-0">
+            <span class="badge {% if entry.status == 'resolved' %}bg-success{% elif entry.status == 'rejected' %}bg-danger{% else %}bg-secondary{% endif %}">
+              {{ entry.get_status_display }}
+            </span>
+            <div class="small text-muted mt-1">
+              {{ entry.created_at|date:"d M Y, H:i" }}{% if entry.changed_by %} &middot; {{ entry.changed_by.display_name }}{% endif %}
+            </div>
+            {% if entry.note %}<div class="small mt-1">{{ entry.note }}</div>{% endif %}
+          </li>
+        {% empty %}
+          <li class="list-group-item px-0 text-muted small">No history yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

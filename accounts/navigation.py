@@ -22,67 +22,69 @@ ROLE_DESCRIPTIONS = {
     "bulk_generator": "Manage bulk waste pickups, records and compliance.",
 }
 
-# Shown to every authenticated user: (label, bootstrap icon, URL name)
-COMMON_MENU = [
+# Menu entries are (label, bootstrap icon, URL name). A URL name of None means
+# the module is planned for a later phase and is shown as "Coming soon".
+MENU_TOP = [
     ("Dashboard", "bi-speedometer2", "accounts:dashboard"),
+]
+
+MENU_BOTTOM = [
+    ("Notifications", "bi-bell", "notifications:list"),
     ("My Profile", "bi-person-circle", "accounts:profile"),
 ]
 
-# Modules planned for later phases: (label, bootstrap icon)
 ROLE_MODULES = {
     "citizen": [
-        ("Report Complaint", "bi-megaphone"),
-        ("My Complaints", "bi-list-check"),
-        ("Training & Quizzes", "bi-mortarboard"),
-        ("Rewards", "bi-award"),
-        ("Marketplace", "bi-shop"),
-        ("Notifications", "bi-bell"),
+        ("Report Complaint", "bi-megaphone", "complaints:create"),
+        ("My Complaints", "bi-list-check", "complaints:list"),
+        ("Training & Quizzes", "bi-mortarboard", None),
+        ("Rewards", "bi-award", None),
+        ("Marketplace", "bi-shop", None),
     ],
     "worker": [
-        ("My Tasks", "bi-clipboard-check"),
-        ("Collection Schedule", "bi-calendar-event"),
-        ("Waste Movement", "bi-signpost-split"),
-        ("Notifications", "bi-bell"),
+        ("My Tasks", "bi-clipboard-check", None),
+        ("Collection Schedule", "bi-calendar-event", None),
+        ("Waste Movement", "bi-signpost-split", None),
     ],
     "municipal_admin": [
-        ("Review Complaints", "bi-inbox"),
-        ("Assign Workers", "bi-people"),
-        ("Ward Management", "bi-map"),
-        ("Collection Scheduling", "bi-calendar-event"),
-        ("Penalties", "bi-exclamation-octagon"),
-        ("Analytics", "bi-bar-chart-line"),
+        ("Review Complaints", "bi-inbox", None),
+        ("Assign Workers", "bi-people", None),
+        ("Ward Management", "bi-map", "waste_management:ward_list"),
+        ("Collection Scheduling", "bi-calendar-event", None),
+        ("Penalties", "bi-exclamation-octagon", None),
+        ("Analytics", "bi-bar-chart-line", None),
     ],
     "health_officer": [
-        ("Inspections", "bi-clipboard2-pulse"),
-        ("Sanitation Reports", "bi-file-earmark-text"),
-        ("Penalties", "bi-exclamation-octagon"),
-        ("Analytics", "bi-bar-chart-line"),
+        ("Inspections", "bi-clipboard2-pulse", None),
+        ("Sanitation Reports", "bi-file-earmark-text", None),
+        ("Penalties", "bi-exclamation-octagon", None),
+        ("Analytics", "bi-bar-chart-line", None),
     ],
     "executive_officer": [
-        ("City Analytics", "bi-graph-up"),
-        ("Reports", "bi-file-earmark-bar-graph"),
-        ("Ward Performance", "bi-map"),
+        ("City Analytics", "bi-graph-up", None),
+        ("Reports", "bi-file-earmark-bar-graph", None),
+        ("Ward Performance", "bi-map", None),
     ],
     "super_admin": [
-        ("User Management", "bi-people"),
-        ("System Settings", "bi-gear"),
-        ("Reports", "bi-file-earmark-bar-graph"),
+        ("User Management", "bi-people", None),
+        ("Ward Management", "bi-map", "waste_management:ward_list"),
+        ("System Settings", "bi-gear", None),
+        ("Reports", "bi-file-earmark-bar-graph", None),
     ],
     "green_champion": [
-        ("Community Monitoring", "bi-binoculars"),
-        ("Training & Quizzes", "bi-mortarboard"),
-        ("Rewards", "bi-award"),
+        ("Community Monitoring", "bi-binoculars", None),
+        ("Training & Quizzes", "bi-mortarboard", None),
+        ("Rewards", "bi-award", None),
     ],
     "bulk_generator": [
-        ("Bulk Pickups", "bi-box-seam"),
-        ("Waste Records", "bi-journal-text"),
-        ("Compliance", "bi-patch-check"),
-        ("Penalties", "bi-exclamation-octagon"),
+        ("Bulk Pickups", "bi-box-seam", None),
+        ("Waste Records", "bi-journal-text", None),
+        ("Compliance", "bi-patch-check", None),
+        ("Penalties", "bi-exclamation-octagon", None),
     ],
 }
 
 
 def get_menu_for_role(role):
     """Return the sidebar entries (label, icon, url_name or None) for a role."""
-    planned = [(label, icon, None) for label, icon in ROLE_MODULES.get(role, [])]
-    return COMMON_MENU + planned
+    return MENU_TOP + list(ROLE_MODULES.get(role, [])) + MENU_BOTTOM

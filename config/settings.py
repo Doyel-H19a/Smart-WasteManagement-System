@@ -28,6 +28,9 @@ INSTALLED_APPS = [
     "rest_framework",
     # Local apps
     "accounts",
+    "waste_management",
+    "complaints",
+    "notifications",
 ]
 
 MIDDLEWARE = [
@@ -54,6 +57,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "accounts.context_processors.sidebar_menu",
+                "notifications.context_processors.notification_summary",
             ],
         },
     },

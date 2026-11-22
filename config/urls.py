@@ -10,6 +10,9 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", home_view, name="home"),
     path("accounts/", include("accounts.urls")),
+    path("wards/", include("waste_management.urls")),
+    path("complaints/", include("complaints.urls")),
+    path("notifications/", include("notifications.urls")),
 ]
 
 # Serve uploaded media files only during local development.
