@@ -1,0 +1,141 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}{% if is_generator %}My Inspections{% else %}Inspections{% endif %} – SwachhAI{% endblock %}
+{% block page_title %}{% if is_generator %}My Inspections{% else %}Inspections{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg">
+    <div class="card-sa p-3 text-center">
+      <div class="h3 fw-bold text-sa mb-0">{{ summary.count }}</div>
+      <div class="small text-muted">Inspections</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg">
+    <div class="card-sa p-3 text-center">
+      <div class="h3 fw-bold text-sa mb-0">{{ summary.compliant }}</div>
+      <div class="small text-muted">Compliant</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg">
+    <div class="card-sa p-3 text-center">
+      <div class="h3 fw-bold text-sa mb-0">{{ summary.minor }}</div>
+      <div class="small text-muted">Minor issues</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg">
+    <div class="card-sa p-3 text-center">
+      <div class="h3 fw-bold text-sa mb-0">{{ summary.major }}</div>
+      <div class="small text-muted">Major violations</div>
+    </div>
+  </div>
+  <div class="col-12 col-lg">
+    <div class="card-sa p-3 text-center">
+      <div class="h3 fw-bold text-sa mb-0">{{ summary.follow_ups_pending }}</div>
+      <div class="small text-muted">
+        Follow-ups pending{% if summary.follow_ups_overdue %} ({{ summary.follow_ups_overdue }} overdue){% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card-sa p-3 p-md-4">
+  <div class="d-flex flex-wrap gap-2 justify-content-between mb-3">
+    <p class="small text-muted mb-0">
+      {% if is_generator %}Inspections of your own premises.{% else %}Totals above match the filters you apply.{% endif %}
+    </p>
+    {% if can_record %}
+      <a href="{% url 'inspections:create' %}" class="btn btn-primary">
+        <i class="bi bi-clipboard-plus"></i> New Inspection
+      </a>
+    {% endif %}
+  </div>
+
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-2">
+      <select name="outcome" class="form-select" aria-label="Filter by outcome">
+        <option value="">All outcomes</option>
+        {% for value, label in outcome_choices %}
+          <option value="{{ value }}"{% if selected_outcome == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <select name="category" class="form-select" aria-label="Filter by category">
+        <option value="">All places</option>
+        {% for value, label in category_choices %}
+          <option value="{{ value }}"{% if selected_category == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <select name="ward" class="form-select" aria-label="Filter by ward">
+        <option value="">All wards</option>
+        {% for w in wards %}
+          <option value="{{ w.pk }}"{% if selected_ward == w.pk|stringformat:"s" %} selected{% endif %}>{{ w }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <select name="follow_up" class="form-select" aria-label="Filter by follow-up">
+        <option value="">Any follow-up</option>
+        <option value="pending"{% if selected_follow_up == "pending" %} selected{% endif %}>Follow-up pending</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <input type="date" name="from" value="{{ date_from }}" class="form-control" aria-label="From date">
+    </div>
+    <div class="col-md-2">
+      <input type="date" name="to" value="{{ date_to }}" class="form-control" aria-label="To date">
+    </div>
+    <div class="col-12 d-flex gap-2">
+      <button type="submit" class="btn btn-outline-primary">Filter</button>
+      <a href="{% url 'inspections:list' %}" class="btn btn-outline-secondary">Reset</a>
+    </div>
+  </form>
+
+  {% if page_obj.object_list %}
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Ref</th><th>Date</th><th>Place</th><th>Ward</th><th>Type</th>
+            <th>Rating</th><th>Outcome</th>{% if not is_generator %}<th>Inspector</th>{% endif %}
+            <th>Follow-up</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for i in page_obj %}
+            <tr>
+              <td class="text-nowrap">{{ i.reference }}</td>
+              <td class="text-nowrap">{{ i.inspection_date|date:"d M Y" }}</td>
+              <td>{{ i.premises_name }}</td>
+              <td>{{ i.ward }}</td>
+              <td>{{ i.get_category_display }}</td>
+              <td>{{ i.overall_rating }}/5</td>
+              <td><span class="badge {{ i.outcome_badge_class }}">{{ i.get_outcome_display }}</span></td>
+              {% if not is_generator %}<td>{{ i.inspector.display_name }}</td>{% endif %}
+              <td class="text-nowrap">
+                {% if i.follow_up_required %}
+                  {% if i.follow_up_completed_at %}<span class="badge bg-success">Done</span>
+                  {% else %}
+                    {{ i.follow_up_date|date:"d M" }}
+                    {% if i.follow_up_overdue %}<span class="badge bg-danger">Overdue</span>{% endif %}
+                  {% endif %}
+                {% else %}–{% endif %}
+              </td>
+              <td class="text-end"><a href="{% url 'inspections:detail' i.pk %}" class="btn btn-outline-primary btn-sm">View</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include "partials/pagination.html" %}
+  {% else %}
+    <div class="text-center text-muted py-5">
+      <i class="bi bi-clipboard2-x fs-1"></i>
+      <p class="mt-2 mb-0">No inspections found.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}{{ inspection.reference }} – SwachhAI{% endblock %}
+{% block page_title %}Inspection {{ inspection.reference }}{% endblock %}
+
+{% block content %}
+<div class="mb-3 d-flex flex-wrap gap-2">
+  <a href="{% url 'inspections:list' %}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Back to inspections
+  </a>
+  {% if can_issue_penalty %}
+    <a href="{% url 'penalties:create' %}?inspection={{ inspection.pk }}" class="btn btn-sm btn-primary">
+      <i class="bi bi-exclamation-octagon"></i> Issue penalty
+    </a>
+  {% endif %}
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card-sa p-4 mb-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+        <h2 class="h4 mb-0">{{ inspection.premises_name }}</h2>
+        <span class="badge {{ inspection.outcome_badge_class }} fs-6">{{ inspection.get_outcome_display }}</span>
+      </div>
+
+      <dl class="row small mb-3">
+        <dt class="col-sm-4">Type</dt><dd class="col-sm-8">{{ inspection.get_category_display }}</dd>
+        <dt class="col-sm-4">Ward</dt><dd class="col-sm-8">{{ inspection.ward }}</dd>
+        <dt class="col-sm-4">Address</dt><dd class="col-sm-8">{{ inspection.address }}</dd>
+        {% if inspection.bulk_generator %}
+          <dt class="col-sm-4">Registered generator</dt>
+          <dd class="col-sm-8">{{ inspection.bulk_generator.display_name }}</dd>
+        {% endif %}
+        <dt class="col-sm-4">Inspection date</dt><dd class="col-sm-8">{{ inspection.inspection_date|date:"d M Y" }}</dd>
+        <dt class="col-sm-4">Inspector</dt><dd class="col-sm-8">{{ inspection.inspector.display_name }}</dd>
+        {% if inspection.latitude and inspection.longitude %}
+          <dt class="col-sm-4">Coordinates</dt>
+          <dd class="col-sm-8">
+            {{ inspection.latitude }}, {{ inspection.longitude }} &middot;
+            <a href="https://www.openstreetmap.org/?mlat={{ inspection.latitude }}&amp;mlon={{ inspection.longitude }}#map=17/{{ inspection.latitude }}/{{ inspection.longitude }}"
+               target="_blank" rel="noopener noreferrer">OpenStreetMap</a>
+          </dd>
+        {% endif %}
+      </dl>
+
+      <h3 class="h6 fw-bold">Ratings</h3>
+      <div class="row g-2 text-center mb-3">
+        <div class="col-6 col-md-3">
+          <div class="border rounded p-2"><div class="h5 mb-0">{{ inspection.segregation_rating }}/5</div><div class="small text-muted">Segregation</div></div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="border rounded p-2"><div class="h5 mb-0">{{ inspection.cleanliness_rating }}/5</div><div class="small text-muted">Cleanliness</div></div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="border rounded p-2"><div class="h5 mb-0">{{ inspection.bin_condition_rating }}/5</div><div class="small text-muted">Bins and equipment</div></div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="border rounded p-2 bg-light"><div class="h5 mb-0">{{ inspection.overall_rating }}/5</div><div class="small text-muted">Overall</div></div>
+        </div>
+      </div>
+
+      <h3 class="h6 fw-bold">Findings</h3>
+      <p>{{ inspection.findings|linebreaksbr }}</p>
+
+      {% if inspection.recommendations %}
+        <h3 class="h6 fw-bold">Recommendations</h3>
+        <p>{{ inspection.recommendations|linebreaksbr }}</p>
+      {% endif %}
+
+      {% if inspection.photo %}
+        <h3 class="h6 fw-bold">Photo</h3>
+        <img src="{{ inspection.photo.url }}" class="img-fluid rounded border" style="max-height: 420px;"
+             alt="Photo from inspection {{ inspection.reference }}">
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card-sa p-4 mb-4">
+      <h3 class="h6 fw-bold mb-3"><i class="bi bi-arrow-repeat text-sa"></i> Follow-up</h3>
+      {% if inspection.follow_up_required %}
+        {% if inspection.follow_up_completed_at %}
+          <div class="alert alert-success small mb-0">
+            Completed on {{ inspection.follow_up_completed_at|date:"d M Y, H:i" }}
+            by {{ inspection.follow_up_completed_by.display_name }}.
+          </div>
+        {% else %}
+          <p class="small mb-2">
+            A follow-up visit is due on <strong>{{ inspection.follow_up_date|date:"d M Y" }}</strong>.
+            {% if inspection.follow_up_overdue %}<span class="badge bg-danger">Overdue</span>{% endif %}
+          </p>
+          {% if can_complete_follow_up %}
+            <form method="post" action="{% url 'inspections:follow_up_done' inspection.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-success w-100"><i class="bi bi-check2-circle"></i> Mark follow-up done</button>
+            </form>
+          {% endif %}
+        {% endif %}
+      {% else %}
+        <p class="small text-muted mb-0">No follow-up was requested.</p>
+      {% endif %}
+    </div>
+
+    <div class="card-sa p-4">
+      <h3 class="h6 fw-bold mb-3"><i class="bi bi-exclamation-octagon text-sa"></i> Penalties from this inspection</h3>
+      {% if penalties %}
+        <ul class="list-group list-group-flush">
+          {% for p in penalties %}
+            <li class="list-group-item px-0">
+              <a href="{% url 'penalties:detail' p.pk %}">{{ p.reference }}</a>
+              &middot; ₹{{ p.amount|floatformat:2 }}
+              <div class="mt-1">{% include "penalties/_status_badge.html" with penalty=p %}</div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="small text-muted mb-0">No penalties have been issued for this inspection.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -34,6 +34,8 @@ INSTALLED_APPS = [
     "admin_dashboard",
     "worker",
     "ai_classification",
+    "inspections",
+    "penalties",
 ]
 
 MIDDLEWARE = [

@@ -39,6 +39,11 @@ SCHEDULE = ("Collection Schedule", "bi-calendar-event", "collection:schedule_lis
 SCHEDULING = ("Collection Scheduling", "bi-calendar-event", "collection:schedule_list")
 MOVEMENTS = ("Waste Movement", "bi-signpost-split", "collection:movement_list")
 LOG_MOVEMENT = ("Log Movement", "bi-plus-square", "collection:movement_create")
+INSPECTIONS = ("Inspections", "bi-clipboard2-pulse", "inspections:list")
+MY_INSPECTIONS = ("My Inspections", "bi-clipboard2-pulse", "inspections:list")
+NEW_INSPECTION = ("New Inspection", "bi-clipboard-plus", "inspections:create")
+PENALTIES = ("Penalties", "bi-exclamation-octagon", "penalties:list")
+MY_PENALTIES = ("My Penalties", "bi-exclamation-octagon", "penalties:list")
 
 ROLE_MODULES = {
     "citizen": [
@@ -46,6 +51,7 @@ ROLE_MODULES = {
         ("My Complaints", "bi-list-check", "complaints:list"),
         MAP,
         SCHEDULE,
+        MY_PENALTIES,
         CLASSIFIER,
         ("Training & Quizzes", "bi-mortarboard", None),
         ("Rewards", "bi-award", None),
@@ -66,24 +72,28 @@ ROLE_MODULES = {
         ("Ward Management", "bi-map", "waste_management:ward_list"),
         SCHEDULING,
         MOVEMENTS,
+        INSPECTIONS,
+        PENALTIES,
         CLASSIFIER,
-        ("Penalties", "bi-exclamation-octagon", None),
         ("Analytics", "bi-bar-chart-line", None),
     ],
     "health_officer": [
         MAP,
         SCHEDULE,
         MOVEMENTS,
+        NEW_INSPECTION,
+        INSPECTIONS,
+        PENALTIES,
         CLASSIFIER,
-        ("Inspections", "bi-clipboard2-pulse", None),
         ("Sanitation Reports", "bi-file-earmark-text", None),
-        ("Penalties", "bi-exclamation-octagon", None),
         ("Analytics", "bi-bar-chart-line", None),
     ],
     "executive_officer": [
         MAP,
         SCHEDULE,
         MOVEMENTS,
+        INSPECTIONS,
+        PENALTIES,
         ("City Analytics", "bi-graph-up", None),
         ("Reports", "bi-file-earmark-bar-graph", None),
         ("Ward Performance", "bi-map", None),
@@ -96,6 +106,8 @@ ROLE_MODULES = {
         ("Ward Management", "bi-map", "waste_management:ward_list"),
         SCHEDULING,
         MOVEMENTS,
+        INSPECTIONS,
+        PENALTIES,
         CLASSIFIER,
         ("System Settings", "bi-gear", None),
         ("Reports", "bi-file-earmark-bar-graph", None),
@@ -109,11 +121,12 @@ ROLE_MODULES = {
     ],
     "bulk_generator": [
         SCHEDULE,
+        MY_INSPECTIONS,
+        MY_PENALTIES,
         CLASSIFIER,
         ("Bulk Pickups", "bi-box-seam", None),
         ("Waste Records", "bi-journal-text", None),
         ("Compliance", "bi-patch-check", None),
-        ("Penalties", "bi-exclamation-octagon", None),
     ],
 }
 

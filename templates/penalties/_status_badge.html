@@ -1,0 +1,2 @@
+<span class="badge {{ penalty.status_badge_class }}">{{ penalty.get_status_display }}</span>
+{% if penalty.is_overdue %}<span class="badge bg-danger">Overdue</span>{% endif %}

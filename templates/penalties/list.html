@@ -1,0 +1,125 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}{% if is_recipient %}My Penalties{% else %}Penalties{% endif %} – SwachhAI{% endblock %}
+{% block page_title %}{% if is_recipient %}My Penalties{% else %}Penalties{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg">
+    <div class="card-sa p-3 text-center">
+      <div class="h3 fw-bold text-sa mb-0">{{ summary.count }}</div>
+      <div class="small text-muted">Penalties</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg">
+    <div class="card-sa p-3 text-center">
+      <div class="h4 fw-bold text-sa mb-0">₹{{ summary.outstanding|floatformat:2 }}</div>
+      <div class="small text-muted">Outstanding ({{ summary.issued_count }})</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg">
+    <div class="card-sa p-3 text-center">
+      <div class="h3 fw-bold text-sa mb-0">{{ summary.overdue_count }}</div>
+      <div class="small text-muted">Overdue</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg">
+    <div class="card-sa p-3 text-center">
+      <div class="h4 fw-bold text-sa mb-0">₹{{ summary.disputed_amount|floatformat:2 }}</div>
+      <div class="small text-muted">Under dispute ({{ summary.disputed_count }})</div>
+    </div>
+  </div>
+  <div class="col-12 col-lg">
+    <div class="card-sa p-3 text-center">
+      <div class="h4 fw-bold text-sa mb-0">₹{{ summary.collected|floatformat:2 }}</div>
+      <div class="small text-muted">Paid ({{ summary.paid_count }})</div>
+    </div>
+  </div>
+</div>
+
+<div class="card-sa p-3 p-md-4">
+  <div class="d-flex flex-wrap gap-2 justify-content-between mb-3">
+    <p class="small text-muted mb-0">
+      {% if is_recipient %}
+        Penalties issued to you. Payments are recorded by the municipal office; there is no online payment.
+      {% else %}
+        Totals above match the filters you apply.
+      {% endif %}
+    </p>
+    {% if can_issue %}
+      <a href="{% url 'penalties:create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Issue Penalty
+      </a>
+    {% endif %}
+  </div>
+
+  <form method="get" class="row g-2 mb-3">
+    {% if not is_recipient %}
+      <div class="col-md-3">
+        <input type="search" name="q" value="{{ q }}" class="form-control"
+               placeholder="Search person or description" aria-label="Search penalties">
+      </div>
+    {% endif %}
+    <div class="col-md-2">
+      <select name="status" class="form-select" aria-label="Filter by status">
+        <option value="">All statuses</option>
+        {% for value, label in status_choices %}
+          <option value="{{ value }}"{% if selected_status == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <select name="ward" class="form-select" aria-label="Filter by ward">
+        <option value="">All wards</option>
+        {% for w in wards %}
+          <option value="{{ w.pk }}"{% if selected_ward == w.pk|stringformat:"s" %} selected{% endif %}>{{ w }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 d-flex align-items-center">
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="overdue" value="1" id="overdueOnly"{% if overdue %} checked{% endif %}>
+        <label class="form-check-label" for="overdueOnly">Overdue only</label>
+      </div>
+    </div>
+    <div class="col-md-2 d-flex gap-2">
+      <button type="submit" class="btn btn-outline-primary flex-grow-1">Filter</button>
+      <a href="{% url 'penalties:list' %}" class="btn btn-outline-secondary">Reset</a>
+    </div>
+  </form>
+
+  {% if page_obj.object_list %}
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Ref</th>{% if not is_recipient %}<th>Issued to</th>{% endif %}
+            <th>Violation</th><th>Ward</th><th class="text-end">Amount</th>
+            <th>Due</th><th>Status</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in page_obj %}
+            <tr>
+              <td class="text-nowrap">{{ p.reference }}</td>
+              {% if not is_recipient %}<td>{{ p.issued_to.display_name }}</td>{% endif %}
+              <td>{{ p.get_violation_type_display }}</td>
+              <td>{{ p.ward }}</td>
+              <td class="text-end text-nowrap">₹{{ p.amount|floatformat:2 }}</td>
+              <td class="text-nowrap">{{ p.due_date|date:"d M Y" }}</td>
+              <td>{% include "penalties/_status_badge.html" with penalty=p %}</td>
+              <td class="text-end"><a href="{% url 'penalties:detail' p.pk %}" class="btn btn-outline-primary btn-sm">View</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include "partials/pagination.html" %}
+  {% else %}
+    <div class="text-center text-muted py-5">
+      <i class="bi bi-shield-check fs-1"></i>
+      <p class="mt-2 mb-0">No penalties found.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

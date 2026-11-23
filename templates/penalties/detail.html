@@ -1,0 +1,157 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}{{ penalty.reference }} – SwachhAI{% endblock %}
+{% block page_title %}Penalty {{ penalty.reference }}{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+  <a href="{% url 'penalties:list' %}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Back to penalties
+  </a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card-sa p-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+        <h2 class="h4 mb-0">{{ penalty.get_violation_type_display }}</h2>
+        <div>{% include "penalties/_status_badge.html" %}</div>
+      </div>
+
+      <div class="display-6 fw-bold text-sa mb-3">₹{{ penalty.amount|floatformat:2 }}</div>
+
+      <dl class="row small mb-3">
+        <dt class="col-sm-4">Issued to</dt>
+        <dd class="col-sm-8">{{ penalty.issued_to.display_name }} ({{ penalty.issued_to.get_role_display }})</dd>
+        <dt class="col-sm-4">Ward</dt><dd class="col-sm-8">{{ penalty.ward }}</dd>
+        <dt class="col-sm-4">Due date</dt><dd class="col-sm-8">{{ penalty.due_date|date:"d M Y" }}</dd>
+        <dt class="col-sm-4">Issued on</dt><dd class="col-sm-8">{{ penalty.created_at|date:"d M Y, H:i" }}</dd>
+        <dt class="col-sm-4">Issued by</dt><dd class="col-sm-8">{{ penalty.issued_by.display_name }}</dd>
+        {% if penalty.inspection %}
+          <dt class="col-sm-4">Inspection</dt>
+          <dd class="col-sm-8">
+            {% if user.role != 'citizen' %}
+              <a href="{% url 'inspections:detail' penalty.inspection.pk %}">{{ penalty.inspection.reference }}</a>
+              – {{ penalty.inspection.premises_name }}
+            {% else %}{{ penalty.inspection.reference }}{% endif %}
+          </dd>
+        {% endif %}
+        {% if penalty.status == 'paid' %}
+          <dt class="col-sm-4">Paid on</dt><dd class="col-sm-8">{{ penalty.paid_at|date:"d M Y, H:i" }}</dd>
+          <dt class="col-sm-4">Receipt no.</dt><dd class="col-sm-8">{{ penalty.payment_reference }}</dd>
+        {% endif %}
+        {% if penalty.resolution_note %}
+          <dt class="col-sm-4">Decision note</dt>
+          <dd class="col-sm-8">{{ penalty.resolution_note }}
+            {% if penalty.resolved_by %}<span class="text-muted">({{ penalty.resolved_by.display_name }})</span>{% endif %}
+          </dd>
+        {% endif %}
+      </dl>
+
+      <h3 class="h6 fw-bold">What happened</h3>
+      <p>{{ penalty.description|linebreaksbr }}</p>
+
+      {% if penalty.dispute_reason %}
+        <h3 class="h6 fw-bold">Dispute</h3>
+        <p class="mb-1">{{ penalty.dispute_reason|linebreaksbr }}</p>
+        <p class="small text-muted">Disputed on {{ penalty.disputed_at|date:"d M Y, H:i" }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card-sa p-4 mb-4">
+      <h3 class="h6 fw-bold mb-3"><i class="bi bi-lightning-charge text-sa"></i> Actions</h3>
+
+      {% if is_recipient and penalty.status == 'issued' %}
+        <div class="alert alert-info small">
+          To pay, visit the municipal office. Staff will record your payment here and you will be notified.
+          SwachhAI does not take online payments.
+        </div>
+      {% elif is_recipient and penalty.status == 'disputed' %}
+        <div class="alert alert-info small mb-0">Your dispute is being reviewed by the municipal office.</div>
+      {% endif %}
+
+      {% if can_dispute %}
+        <form method="post" action="{% url 'penalties:dispute' penalty.pk %}" class="needs-validation" novalidate>
+          {% csrf_token %}
+          {% include "partials/form_field.html" with field=dispute_form.reason %}
+          <button type="submit" class="btn btn-outline-warning w-100">
+            <i class="bi bi-chat-left-text"></i> Dispute this penalty
+          </button>
+          <div class="form-text">You can dispute a penalty only once.</div>
+        </form>
+      {% elif is_recipient and penalty.status == 'issued' and penalty.disputed_at %}
+        <div class="alert alert-secondary small mb-0">
+          Your dispute was reviewed and the penalty stands. A penalty can be disputed only once.
+        </div>
+      {% endif %}
+
+      {% if can_record_payment %}
+        <form method="post" action="{% url 'penalties:pay' penalty.pk %}" class="needs-validation" novalidate>
+          {% csrf_token %}
+          {% include "partials/form_field.html" with field=pay_form.reference %}
+          <button type="submit" class="btn btn-success w-100"><i class="bi bi-cash-coin"></i> Record payment received</button>
+        </form>
+        <hr>
+      {% endif %}
+
+      {% if can_decide %}
+        {% if penalty.status == 'disputed' %}
+          <h4 class="h6 fw-bold">Reject the dispute</h4>
+          <form method="post" action="{% url 'penalties:reject_dispute' penalty.pk %}" class="needs-validation" novalidate>
+            {% csrf_token %}
+            {% include "partials/form_field.html" with field=reject_form.note %}
+            {% include "partials/form_field.html" with field=reject_form.new_due_date %}
+            <button type="submit" class="btn btn-outline-danger w-100">Reject dispute (penalty stands)</button>
+          </form>
+          <hr>
+        {% endif %}
+
+        <h4 class="h6 fw-bold">Waive{% if penalty.status == 'disputed' %} (accept the dispute){% endif %}</h4>
+        <form method="post" action="{% url 'penalties:waive' penalty.pk %}" class="needs-validation" novalidate>
+          {% csrf_token %}
+          {% include "partials/form_field.html" with field=waive_form.reason %}
+          <button type="submit" class="btn btn-outline-primary w-100">Waive penalty</button>
+        </form>
+        <hr>
+        <h4 class="h6 fw-bold">Cancel (issued in error)</h4>
+        <form method="post" action="{% url 'penalties:cancel' penalty.pk %}" class="needs-validation" novalidate>
+          {% csrf_token %}
+          {% include "partials/form_field.html" with field=cancel_form.reason %}
+          <button type="submit" class="btn btn-outline-secondary w-100">Cancel penalty</button>
+        </form>
+      {% endif %}
+
+      {% if blocked_by_conflict %}
+        <div class="alert alert-warning small mb-0">
+          You issued this penalty, so another officer or the Super Admin must decide on it.
+        </div>
+      {% endif %}
+
+      {% if not can_dispute and not can_record_payment and not can_decide and not blocked_by_conflict and not is_recipient %}
+        <p class="small text-muted mb-0">No actions are available for your role on this penalty.</p>
+      {% endif %}
+    </div>
+
+    <div class="card-sa p-4">
+      <h3 class="h6 fw-bold mb-3"><i class="bi bi-clock-history text-sa"></i> Timeline</h3>
+      <ul class="list-group list-group-flush">
+        {% for event in events %}
+          <li class="list-group-item px-0">
+            <span class="badge {% if event.status == 'paid' %}bg-success{% elif event.status == 'issued' %}bg-warning text-dark{% elif event.status == 'disputed' %}bg-info text-dark{% else %}bg-secondary{% endif %}">
+              {{ event.get_status_display }}
+            </span>
+            <div class="small text-muted mt-1">
+              {{ event.created_at|date:"d M Y, H:i" }}{% if event.actor %} &middot; {{ event.actor.display_name }}{% endif %}
+            </div>
+            {% if event.note %}<div class="small mt-1">{{ event.note }}</div>{% endif %}
+          </li>
+        {% empty %}
+          <li class="list-group-item px-0 text-muted small">No history yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

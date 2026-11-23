@@ -1,0 +1,123 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}New Inspection – SwachhAI{% endblock %}
+{% block page_title %}New Inspection{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-9">
+    <div class="card-sa p-4">
+      <p class="text-muted small">
+        Record what you found. Inspections cannot be edited after saving, so please check the details first.
+      </p>
+
+      <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <h2 class="h6 fw-bold text-sa mb-3">Place</h2>
+        <div class="row">
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.category %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.ward %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.premises_name %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.address %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.bulk_generator %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.inspection_date %}</div>
+        </div>
+
+        <h2 class="h6 fw-bold text-sa mb-3 mt-2">Ratings (1 = poor, 5 = excellent)</h2>
+        <div class="row">
+          <div class="col-md-4">{% include "partials/form_field.html" with field=form.segregation_rating %}</div>
+          <div class="col-md-4">{% include "partials/form_field.html" with field=form.cleanliness_rating %}</div>
+          <div class="col-md-4">{% include "partials/form_field.html" with field=form.bin_condition_rating %}</div>
+        </div>
+
+        <h2 class="h6 fw-bold text-sa mb-3 mt-2">Findings</h2>
+        <div class="row">
+          <div class="col-md-4">{% include "partials/form_field.html" with field=form.outcome %}</div>
+          <div class="col-12">{% include "partials/form_field.html" with field=form.findings %}</div>
+          <div class="col-12">{% include "partials/form_field.html" with field=form.recommendations %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.follow_up_required %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.follow_up_date %}</div>
+        </div>
+
+        <h2 class="h6 fw-bold text-sa mb-3 mt-2">Evidence</h2>
+        <div class="row">
+          <div class="col-12">{% include "partials/form_field.html" with field=form.photo %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.latitude %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.longitude %}</div>
+        </div>
+        <img id="photoPreview" class="img-fluid rounded border d-none mb-3" style="max-height: 200px;" alt="Selected photo preview">
+
+        <div class="mb-3">
+          <button type="button" class="btn btn-outline-primary btn-sm" id="useLocation">
+            <i class="bi bi-geo-alt"></i> Use my current location
+          </button>
+          <span class="small text-muted ms-2" id="locationStatus" aria-live="polite"></span>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle"></i> Save Inspection</button>
+          <a href="{% url 'inspections:list' %}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  "use strict";
+
+  // "Use my current location" (works on localhost and HTTPS)
+  var button = document.getElementById("useLocation");
+  var lat = document.getElementById("id_latitude");
+  var lon = document.getElementById("id_longitude");
+  var status = document.getElementById("locationStatus");
+  if (button) {
+    if (!navigator.geolocation) {
+      button.disabled = true;
+      status.textContent = "Location is not supported by this browser.";
+    } else {
+      button.addEventListener("click", function () {
+        status.textContent = "Getting your location…";
+        navigator.geolocation.getCurrentPosition(
+          function (position) {
+            lat.value = position.coords.latitude.toFixed(6);
+            lon.value = position.coords.longitude.toFixed(6);
+            status.textContent = "Location added.";
+          },
+          function () {
+            status.textContent = "Could not get your location. You can leave these fields empty.";
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      });
+    }
+  }
+
+  // Photo preview and client-side size check (5 MB)
+  var input = document.getElementById("id_photo");
+  var preview = document.getElementById("photoPreview");
+  if (input && preview) {
+    input.addEventListener("change", function () {
+      var file = input.files[0];
+      if (!file) {
+        preview.classList.add("d-none");
+        input.setCustomValidity("");
+        return;
+      }
+      var tooBig = file.size > 5 * 1024 * 1024;
+      input.setCustomValidity(tooBig ? "Image must be 5 MB or smaller." : "");
+      if (tooBig) input.reportValidity();
+      preview.src = URL.createObjectURL(file);
+      preview.classList.remove("d-none");
+    });
+  }
+})();
+</script>
+{% endblock %}
