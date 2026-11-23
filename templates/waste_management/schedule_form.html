@@ -1,0 +1,37 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}{{ page_title }} – SwachhAI{% endblock %}
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-9">
+    <div class="card-sa p-4">
+      <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <div class="row">
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.ward %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.route_name %}</div>
+          <div class="col-md-4">{% include "partials/form_field.html" with field=form.waste_type %}</div>
+          <div class="col-md-4">{% include "partials/form_field.html" with field=form.weekday %}</div>
+          <div class="col-md-2">{% include "partials/form_field.html" with field=form.start_time %}</div>
+          <div class="col-md-2">{% include "partials/form_field.html" with field=form.end_time %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.assigned_worker %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.vehicle_number %}</div>
+          <div class="col-12">{% include "partials/form_field.html" with field=form.notes %}</div>
+          <div class="col-12">{% include "partials/form_field.html" with field=form.is_active %}</div>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check2-circle"></i> {% if is_edit %}Save Changes{% else %}Create Schedule{% endif %}
+          </button>
+          <a href="{% url 'collection:schedule_list' %}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

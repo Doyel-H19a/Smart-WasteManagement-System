@@ -1,0 +1,82 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Log Waste Movement – SwachhAI{% endblock %}
+{% block page_title %}Log Waste Movement{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-9">
+    <div class="card-sa p-4">
+      <p class="text-muted small">
+        Record a pickup, transfer or disposal. The time is saved automatically and entries cannot be edited later.
+      </p>
+
+      <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="row">
+          <div class="col-md-4">{% include "partials/form_field.html" with field=form.movement_type %}</div>
+          <div class="col-md-4">{% include "partials/form_field.html" with field=form.waste_type %}</div>
+          <div class="col-md-4">{% include "partials/form_field.html" with field=form.quantity_kg %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.ward %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.schedule %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.from_location %}</div>
+          <div class="col-md-6">{% include "partials/form_field.html" with field=form.to_location %}</div>
+          <div class="col-md-4">{% include "partials/form_field.html" with field=form.vehicle_number %}</div>
+          <div class="col-md-4">{% include "partials/form_field.html" with field=form.latitude %}</div>
+          <div class="col-md-4">{% include "partials/form_field.html" with field=form.longitude %}</div>
+          <div class="col-12">{% include "partials/form_field.html" with field=form.notes %}</div>
+        </div>
+
+        <div class="mb-3">
+          <button type="button" class="btn btn-outline-primary btn-sm" id="useLocation">
+            <i class="bi bi-geo-alt"></i> Use my current location
+          </button>
+          <span class="small text-muted ms-2" id="locationStatus" aria-live="polite"></span>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle"></i> Save Entry</button>
+          <a href="{% url 'collection:movement_list' %}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  "use strict";
+  var button = document.getElementById("useLocation");
+  var lat = document.getElementById("id_latitude");
+  var lon = document.getElementById("id_longitude");
+  var status = document.getElementById("locationStatus");
+  if (!button) return;
+
+  if (!navigator.geolocation) {
+    button.disabled = true;
+    status.textContent = "Location is not supported by this browser.";
+    return;
+  }
+  button.addEventListener("click", function () {
+    status.textContent = "Getting your location…";
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        lat.value = position.coords.latitude.toFixed(6);
+        lon.value = position.coords.longitude.toFixed(6);
+        status.textContent = "Location added.";
+      },
+      function () {
+        status.textContent = "Could not get your location. You can leave these fields empty.";
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  });
+})();
+</script>
+{% endblock %}

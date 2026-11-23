@@ -1,0 +1,103 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Waste Movement Map – SwachhAI{% endblock %}
+{% block page_title %}Waste Movement Map{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  #map { height: 68vh; min-height: 420px; border-radius: .75rem; border: 1px solid var(--sa-border); }
+  .legend-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: .35rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card-sa p-3 p-md-4">
+  <div class="row g-2 align-items-center mb-3">
+    <div class="col-md-4">
+      <select id="typeFilter" class="form-select" aria-label="Filter by movement type">
+        <option value="">All movement types</option>
+        {% for value, label in type_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md text-md-end small text-muted">
+      Showing {{ shown_count }} movement(s).
+      {% if missing_count %}{{ missing_count }} without coordinates are not shown.{% endif %}
+      <a href="{% url 'collection:movement_list' %}" class="ms-2">Back to list</a>
+    </div>
+  </div>
+
+  <div id="map" role="application" aria-label="Map of waste movements"></div>
+  <noscript><p class="text-danger mt-2">The map needs JavaScript.</p></noscript>
+
+  <div class="d-flex flex-wrap gap-3 mt-3 small">
+    {% for item in legend %}
+      <span><span class="legend-dot" style="background: {{ item.color }};"></span>{{ item.label }}</span>
+    {% endfor %}
+  </div>
+  <p class="small text-muted mt-2 mb-0">Map data &copy; OpenStreetMap contributors. The map needs an internet connection to load tiles.</p>
+</div>
+
+{{ map_data|json_script:"map-data" }}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+  "use strict";
+  var mapEl = document.getElementById("map");
+  if (typeof L === "undefined") {
+    mapEl.innerHTML = '<p class="p-3 text-danger">The map library could not be loaded. Check your internet connection.</p>';
+    return;
+  }
+
+  var data = JSON.parse(document.getElementById("map-data").textContent);
+  var map = L.map("map").setView([22.5726, 88.3639], 11);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  var layer = L.layerGroup().addTo(map);
+
+  // Popups are built with textContent so logged text can never inject HTML.
+  function addLine(parent, text, bold) {
+    var line = document.createElement(bold ? "strong" : "span");
+    line.textContent = text;
+    parent.appendChild(line);
+    parent.appendChild(document.createElement("br"));
+  }
+
+  function popup(m) {
+    var box = document.createElement("div");
+    addLine(box, m.type_label + " · " + m.kg + " kg", true);
+    addLine(box, m.waste + " · " + m.ward, false);
+    addLine(box, m.from + " → " + m.to, false);
+    addLine(box, m.when + " · " + m.by, false);
+    return box;
+  }
+
+  function render(typeFilter) {
+    layer.clearLayers();
+    var points = [];
+    data.movements.forEach(function (m) {
+      if (typeFilter && m.type !== typeFilter) return;
+      L.circleMarker([m.lat, m.lng], {
+        radius: 9, color: "#ffffff", weight: 2,
+        fillColor: data.colors[m.type] || "#6c757d", fillOpacity: 0.95
+      }).bindPopup(popup(m)).addTo(layer);
+      points.push([m.lat, m.lng]);
+    });
+    if (points.length) {
+      map.fitBounds(points, { padding: [40, 40], maxZoom: 15 });
+    }
+  }
+
+  render("");
+  document.getElementById("typeFilter").addEventListener("change", function (e) {
+    render(e.target.value);
+  });
+})();
+</script>
+{% endblock %}

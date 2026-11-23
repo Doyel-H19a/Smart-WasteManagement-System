@@ -35,12 +35,17 @@ MENU_BOTTOM = [
 
 MAP = ("Complaint Map", "bi-geo-alt", "waste_management:map")
 CLASSIFIER = ("Waste Classifier (Demo)", "bi-cpu", "ai_classification:classify")
+SCHEDULE = ("Collection Schedule", "bi-calendar-event", "collection:schedule_list")
+SCHEDULING = ("Collection Scheduling", "bi-calendar-event", "collection:schedule_list")
+MOVEMENTS = ("Waste Movement", "bi-signpost-split", "collection:movement_list")
+LOG_MOVEMENT = ("Log Movement", "bi-plus-square", "collection:movement_create")
 
 ROLE_MODULES = {
     "citizen": [
         ("Report Complaint", "bi-megaphone", "complaints:create"),
         ("My Complaints", "bi-list-check", "complaints:list"),
         MAP,
+        SCHEDULE,
         CLASSIFIER,
         ("Training & Quizzes", "bi-mortarboard", None),
         ("Rewards", "bi-award", None),
@@ -49,22 +54,26 @@ ROLE_MODULES = {
     "worker": [
         ("My Tasks", "bi-clipboard-check", "worker:task_list"),
         MAP,
+        SCHEDULE,
+        LOG_MOVEMENT,
+        MOVEMENTS,
         CLASSIFIER,
-        ("Collection Schedule", "bi-calendar-event", None),
-        ("Waste Movement", "bi-signpost-split", None),
     ],
     "municipal_admin": [
         ("Review Complaints", "bi-inbox", "admin_dashboard:queue"),
         ("Assign Workers", "bi-people", "admin_dashboard:workers"),
         MAP,
         ("Ward Management", "bi-map", "waste_management:ward_list"),
+        SCHEDULING,
+        MOVEMENTS,
         CLASSIFIER,
-        ("Collection Scheduling", "bi-calendar-event", None),
         ("Penalties", "bi-exclamation-octagon", None),
         ("Analytics", "bi-bar-chart-line", None),
     ],
     "health_officer": [
         MAP,
+        SCHEDULE,
+        MOVEMENTS,
         CLASSIFIER,
         ("Inspections", "bi-clipboard2-pulse", None),
         ("Sanitation Reports", "bi-file-earmark-text", None),
@@ -73,6 +82,8 @@ ROLE_MODULES = {
     ],
     "executive_officer": [
         MAP,
+        SCHEDULE,
+        MOVEMENTS,
         ("City Analytics", "bi-graph-up", None),
         ("Reports", "bi-file-earmark-bar-graph", None),
         ("Ward Performance", "bi-map", None),
@@ -83,17 +94,21 @@ ROLE_MODULES = {
         MAP,
         ("User Management", "bi-person-gear", None),
         ("Ward Management", "bi-map", "waste_management:ward_list"),
+        SCHEDULING,
+        MOVEMENTS,
         CLASSIFIER,
         ("System Settings", "bi-gear", None),
         ("Reports", "bi-file-earmark-bar-graph", None),
     ],
     "green_champion": [
+        SCHEDULE,
         CLASSIFIER,
         ("Community Monitoring", "bi-binoculars", None),
         ("Training & Quizzes", "bi-mortarboard", None),
         ("Rewards", "bi-award", None),
     ],
     "bulk_generator": [
+        SCHEDULE,
         CLASSIFIER,
         ("Bulk Pickups", "bi-box-seam", None),
         ("Waste Records", "bi-journal-text", None),

@@ -11,6 +11,7 @@ urlpatterns = [
     path("", home_view, name="home"),
     path("accounts/", include("accounts.urls")),
     path("wards/", include("waste_management.urls")),
+    path("collection/", include("waste_management.collection_urls")),
     path("complaints/", include("complaints.urls")),
     path("notifications/", include("notifications.urls")),
     path("manage/", include("admin_dashboard.urls")),

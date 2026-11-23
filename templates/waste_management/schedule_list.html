@@ -1,0 +1,108 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Collection Schedule – SwachhAI{% endblock %}
+{% block page_title %}Collection Schedule{% endblock %}
+
+{% block content %}
+<div class="card-sa p-3 p-md-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
+    <p class="small text-muted mb-0">
+      Today is <strong>{{ today_label }}</strong>. Today's active collections are highlighted.
+    </p>
+    {% if can_manage %}
+      <a href="{% url 'collection:schedule_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Add Schedule
+      </a>
+    {% endif %}
+  </div>
+
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-3">
+      <select name="ward" class="form-select" aria-label="Filter by ward">
+        <option value="">All wards</option>
+        {% for w in wards %}
+          <option value="{{ w.pk }}"{% if selected_ward == w.pk|stringformat:"s" %} selected{% endif %}>{{ w }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <select name="day" class="form-select" aria-label="Filter by day">
+        <option value="">Every day</option>
+        {% for value, label in weekday_choices %}
+          <option value="{{ value }}"{% if selected_day == value|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <select name="waste_type" class="form-select" aria-label="Filter by waste type">
+        <option value="">All waste types</option>
+        {% for value, label in waste_choices %}
+          <option value="{{ value }}"{% if selected_waste == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3 d-flex gap-2">
+      <button type="submit" class="btn btn-outline-primary flex-grow-1">Filter</button>
+      <a href="{% url 'collection:schedule_list' %}" class="btn btn-outline-secondary">Reset</a>
+    </div>
+  </form>
+
+  {% if page_obj.object_list %}
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Day</th><th>Time</th><th>Ward</th><th>Route</th><th>Waste</th><th>Vehicle</th>
+            {% if show_ops %}<th>Worker</th><th>Last pickup</th>{% endif %}
+            {% if can_manage %}<th>Status</th>{% endif %}
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in page_obj %}
+            <tr{% if s.weekday == today_weekday and s.is_active %} class="table-success"{% endif %}>
+              <td class="text-nowrap">{{ s.get_weekday_display }}</td>
+              <td class="text-nowrap">{{ s.time_window }}</td>
+              <td>{{ s.ward }}</td>
+              <td>{{ s.route_name }}</td>
+              <td>{{ s.get_waste_type_display }}</td>
+              <td>{{ s.vehicle_number|default:"–" }}</td>
+              {% if show_ops %}
+                <td>{{ s.assigned_worker.display_name|default:"Unassigned" }}</td>
+                <td class="text-nowrap">{{ s.last_pickup|date:"d M, H:i"|default:"–" }}</td>
+              {% endif %}
+              {% if can_manage %}
+                <td>
+                  {% if s.is_active %}<span class="badge bg-success">Active</span>
+                  {% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}
+                </td>
+              {% endif %}
+              <td class="text-end text-nowrap">
+                {% if can_manage %}
+                  <a href="{% url 'collection:schedule_update' s.pk %}" class="btn btn-outline-primary btn-sm">Edit</a>
+                  <form method="post" action="{% url 'collection:schedule_toggle' s.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-secondary btn-sm">
+                      {% if s.is_active %}Deactivate{% else %}Activate{% endif %}
+                    </button>
+                  </form>
+                {% elif is_worker %}
+                  <a href="{% url 'collection:movement_create' %}?schedule={{ s.pk }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-square"></i> Log pickup
+                  </a>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include "partials/pagination.html" %}
+  {% else %}
+    <div class="text-center text-muted py-5">
+      <i class="bi bi-calendar-x fs-1"></i>
+      <p class="mt-2 mb-0">No collection schedules found.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

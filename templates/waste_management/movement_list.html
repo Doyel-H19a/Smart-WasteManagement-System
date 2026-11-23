@@ -1,0 +1,127 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Waste Movement – SwachhAI{% endblock %}
+{% block page_title %}Waste Movement{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg">
+    <div class="card-sa p-3 text-center">
+      <div class="h3 fw-bold text-sa mb-0">{{ summary.count }}</div>
+      <div class="small text-muted">Entries</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg">
+    <div class="card-sa p-3 text-center">
+      <div class="h3 fw-bold text-sa mb-0">{{ summary.total_kg|floatformat:2 }}</div>
+      <div class="small text-muted">Total kg</div>
+    </div>
+  </div>
+  <div class="col-4 col-lg">
+    <div class="card-sa p-3 text-center">
+      <div class="h5 fw-bold text-sa mb-0">{{ summary.pickup_kg|floatformat:2 }}</div>
+      <div class="small text-muted">Picked up (kg)</div>
+    </div>
+  </div>
+  <div class="col-4 col-lg">
+    <div class="card-sa p-3 text-center">
+      <div class="h5 fw-bold text-sa mb-0">{{ summary.transfer_kg|floatformat:2 }}</div>
+      <div class="small text-muted">Transferred (kg)</div>
+    </div>
+  </div>
+  <div class="col-4 col-lg">
+    <div class="card-sa p-3 text-center">
+      <div class="h5 fw-bold text-sa mb-0">{{ summary.disposal_kg|floatformat:2 }}</div>
+      <div class="small text-muted">Disposed (kg)</div>
+    </div>
+  </div>
+</div>
+
+<div class="card-sa p-3 p-md-4">
+  <div class="d-flex flex-wrap gap-2 justify-content-between mb-3">
+    <p class="small text-muted mb-0">
+      {% if is_worker %}Your logged movements.{% else %}Totals below match the filters you apply.{% endif %}
+    </p>
+    <div class="d-flex gap-2">
+      <a href="{% url 'collection:movement_map' %}" class="btn btn-outline-primary">
+        <i class="bi bi-geo-alt"></i> Map view
+      </a>
+      {% if is_worker %}
+        <a href="{% url 'collection:movement_create' %}" class="btn btn-primary">
+          <i class="bi bi-plus-square"></i> Log Movement
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-2">
+      <select name="type" class="form-select" aria-label="Filter by type">
+        <option value="">All types</option>
+        {% for value, label in type_choices %}
+          <option value="{{ value }}"{% if selected_type == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <select name="waste_type" class="form-select" aria-label="Filter by waste type">
+        <option value="">All waste</option>
+        {% for value, label in waste_choices %}
+          <option value="{{ value }}"{% if selected_waste == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <select name="ward" class="form-select" aria-label="Filter by ward">
+        <option value="">All wards</option>
+        {% for w in wards %}
+          <option value="{{ w.pk }}"{% if selected_ward == w.pk|stringformat:"s" %} selected{% endif %}>{{ w }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <input type="date" name="from" value="{{ date_from }}" class="form-control" aria-label="From date">
+    </div>
+    <div class="col-md-2">
+      <input type="date" name="to" value="{{ date_to }}" class="form-control" aria-label="To date">
+    </div>
+    <div class="col-md-2 d-flex gap-2">
+      <button type="submit" class="btn btn-outline-primary flex-grow-1">Filter</button>
+      <a href="{% url 'collection:movement_list' %}" class="btn btn-outline-secondary">Reset</a>
+    </div>
+  </form>
+
+  {% if page_obj.object_list %}
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>When</th><th>Type</th><th>Waste</th><th class="text-end">kg</th><th>Ward</th>
+            <th>From → To</th><th>Vehicle</th>{% if not is_worker %}<th>Logged by</th>{% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in page_obj %}
+            <tr>
+              <td class="text-nowrap">{{ m.moved_at|date:"d M Y, H:i" }}</td>
+              <td><span class="badge {{ m.badge_class }}">{{ m.get_movement_type_display }}</span></td>
+              <td>{{ m.get_waste_type_display }}</td>
+              <td class="text-end">{{ m.quantity_kg|floatformat:2 }}</td>
+              <td>{{ m.ward }}</td>
+              <td class="small">{{ m.from_location }} <i class="bi bi-arrow-right"></i> {{ m.to_location }}</td>
+              <td>{{ m.vehicle_number|default:"–" }}</td>
+              {% if not is_worker %}<td>{{ m.logged_by.display_name }}</td>{% endif %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include "partials/pagination.html" %}
+  {% else %}
+    <div class="text-center text-muted py-5">
+      <i class="bi bi-signpost-split fs-1"></i>
+      <p class="mt-2 mb-0">No waste movements found.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
