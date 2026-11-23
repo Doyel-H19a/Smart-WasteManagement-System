@@ -1,0 +1,11 @@
+{% if is_demo %}
+  <div class="alert alert-warning d-flex gap-2" role="alert">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <div><strong>DEMONSTRATION MODE.</strong> {{ demo_notice }}</div>
+  </div>
+{% else %}
+  <div class="alert alert-info d-flex gap-2" role="alert">
+    <i class="bi bi-info-circle-fill"></i>
+    <div>Results come from the trained Keras model configured for this system. Always verify important results manually.</div>
+  </div>
+{% endif %}

@@ -1,0 +1,54 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Classification Result – SwachhAI{% endblock %}
+{% block page_title %}Classification Result{% endblock %}
+
+{% block content %}
+{% include "ai_classification/_notice.html" %}
+
+<div class="mb-3">
+  <a href="{% url 'ai_classification:classify' %}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Classify another photo
+  </a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card-sa p-4 text-center">
+      <img src="{{ record.image.url }}" class="img-fluid rounded border" style="max-height: 420px;" alt="Classified waste photo">
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card-sa p-4">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <h2 class="h5 mb-0">
+          {% if record.is_demo %}Demo label:{% else %}Predicted class:{% endif %}
+          {{ record.label_display }}
+        </h2>
+        {% if record.is_demo %}<span class="badge bg-warning text-dark">DEMO</span>{% endif %}
+      </div>
+
+      <p class="small text-muted mb-1">
+        {% if record.is_demo %}Placeholder confidence{% else %}Model confidence{% endif %}: {{ record.confidence_percent }}%
+      </p>
+      <div class="progress mb-3" role="progressbar" aria-valuenow="{{ record.confidence_percent }}" aria-valuemin="0" aria-valuemax="100">
+        <div class="progress-bar bg-success" style="width: {{ record.confidence_percent }}%"></div>
+      </div>
+
+      {% if record.disposal_tip %}
+        <h3 class="h6 fw-bold">General disposal tip</h3>
+        <p>{{ record.disposal_tip }}</p>
+      {% endif %}
+
+      <dl class="row small mb-0">
+        <dt class="col-sm-4">Classifier</dt><dd class="col-sm-8">{{ record.model_name }}</dd>
+        <dt class="col-sm-4">Classified on</dt><dd class="col-sm-8">{{ record.created_at|date:"d M Y, H:i" }}</dd>
+        {% if record.user_id != user.pk %}
+          <dt class="col-sm-4">Uploaded by</dt><dd class="col-sm-8">{{ record.user.display_name }}</dd>
+        {% endif %}
+      </dl>
+    </div>
+  </div>
+</div>
+{% endblock %}

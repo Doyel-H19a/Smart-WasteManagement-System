@@ -1,0 +1,135 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Complaint Map – SwachhAI{% endblock %}
+{% block page_title %}Complaint Map{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  #map { height: 68vh; min-height: 420px; border-radius: .75rem; border: 1px solid var(--sa-border); }
+  .legend-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: .35rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card-sa p-3 p-md-4">
+  <div class="row g-2 align-items-center mb-3">
+    <div class="col-md-4">
+      <select id="statusFilter" class="form-select" aria-label="Filter by status">
+        <option value="">All statuses</option>
+        {% for value, label in status_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    {% if show_wards %}
+      <div class="col-md-4">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="showWards" checked>
+          <label class="form-check-label" for="showWards">Show ward areas</label>
+        </div>
+      </div>
+    {% endif %}
+    <div class="col-md text-md-end small text-muted">
+      Showing {{ shown_count }} complaint(s) on the map.
+      {% if missing_count %}{{ missing_count }} without coordinates are not shown.{% endif %}
+    </div>
+  </div>
+
+  <div id="map" role="application" aria-label="Map of complaints"></div>
+  <noscript><p class="text-danger mt-2">The map needs JavaScript.</p></noscript>
+
+  <div class="d-flex flex-wrap gap-3 mt-3 small">
+    {% for item in legend %}
+      <span><span class="legend-dot" style="background: {{ item.color }};"></span>{{ item.label }}</span>
+    {% endfor %}
+  </div>
+  <p class="small text-muted mt-2 mb-0">Map data &copy; OpenStreetMap contributors. The map needs an internet connection to load tiles.</p>
+</div>
+
+{{ map_data|json_script:"map-data" }}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+  "use strict";
+  var mapEl = document.getElementById("map");
+  if (typeof L === "undefined") {
+    mapEl.innerHTML = '<p class="p-3 text-danger">The map library could not be loaded. Check your internet connection.</p>';
+    return;
+  }
+
+  var data = JSON.parse(document.getElementById("map-data").textContent);
+  var map = L.map("map").setView([22.5726, 88.3639], 11);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  var wardLayer = L.layerGroup().addTo(map);
+  var complaintLayer = L.layerGroup().addTo(map);
+
+  // Popups are built with textContent so complaint text can never inject HTML.
+  function addLine(parent, text, bold) {
+    var line = document.createElement(bold ? "strong" : "span");
+    line.textContent = text;
+    parent.appendChild(line);
+    parent.appendChild(document.createElement("br"));
+  }
+
+  function complaintPopup(c) {
+    var box = document.createElement("div");
+    addLine(box, c.ref + " – " + c.title, true);
+    addLine(box, c.status_label + " · " + c.ward, false);
+    var link = document.createElement("a");
+    link.href = c.url;
+    link.textContent = "Open complaint";
+    box.appendChild(link);
+    return box;
+  }
+
+  function wardPopup(w) {
+    var box = document.createElement("div");
+    addLine(box, "Ward " + w.number + " – " + w.name, true);
+    if (w.zone) addLine(box, "Zone: " + w.zone, false);
+    addLine(box, w.open + " open / " + w.total + " total complaints", false);
+    return box;
+  }
+
+  data.wards.forEach(function (w) {
+    L.circle([w.lat, w.lng], {
+      radius: 800, color: "#14532D", weight: 1, fillColor: "#059669", fillOpacity: 0.08
+    }).bindPopup(wardPopup(w)).addTo(wardLayer);
+  });
+
+  function render(statusFilter) {
+    complaintLayer.clearLayers();
+    var points = [];
+    data.complaints.forEach(function (c) {
+      if (statusFilter && c.status !== statusFilter) return;
+      var color = data.colors[c.status] || "#6c757d";
+      L.circleMarker([c.lat, c.lng], {
+        radius: 9, color: "#ffffff", weight: 2, fillColor: color, fillOpacity: 0.95
+      }).bindPopup(complaintPopup(c)).addTo(complaintLayer);
+      points.push([c.lat, c.lng]);
+    });
+    if (points.length) {
+      map.fitBounds(points, { padding: [40, 40], maxZoom: 15 });
+    }
+  }
+
+  render("");
+
+  document.getElementById("statusFilter").addEventListener("change", function (e) {
+    render(e.target.value);
+  });
+
+  var wardToggle = document.getElementById("showWards");
+  if (wardToggle) {
+    wardToggle.addEventListener("change", function (e) {
+      if (e.target.checked) { map.addLayer(wardLayer); } else { map.removeLayer(wardLayer); }
+    });
+  }
+})();
+</script>
+{% endblock %}

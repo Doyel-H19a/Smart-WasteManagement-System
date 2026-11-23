@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "notifications",
     "admin_dashboard",
     "worker",
+    "ai_classification",
 ]
 
 MIDDLEWARE = [
@@ -117,3 +118,14 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ],
 }
+
+# --- AI waste classification -------------------------------------------------
+# "demo"  = clearly labelled placeholder (default, no model needed)
+# "keras" = a trained TensorFlow/Keras CNN (only after you provide a model file)
+AI_CLASSIFIER_BACKEND = config("AI_CLASSIFIER_BACKEND", default="demo")
+AI_MODEL_PATH = BASE_DIR / "ai_models" / "waste_cnn.keras"
+# Output order of YOUR trained model. Must match the order used in training.
+AI_CLASS_NAMES = [
+    "organic", "plastic", "paper", "metal",
+    "glass", "e_waste", "hazardous", "construction",
+]

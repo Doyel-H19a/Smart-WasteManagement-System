@@ -1,0 +1,78 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Waste Classifier – SwachhAI{% endblock %}
+{% block page_title %}Waste Classifier{% endblock %}
+
+{% block content %}
+{% include "ai_classification/_notice.html" %}
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card-sa p-4">
+      <h2 class="h6 fw-bold mb-3"><i class="bi bi-cpu text-sa"></i> Classify a waste photo</h2>
+      <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+        {% include "partials/form_field.html" with field=form.image %}
+        <img id="classifyPreview" class="img-fluid rounded border d-none mb-3" style="max-height: 220px;" alt="Selected image preview">
+        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Classify</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card-sa p-4">
+      <h2 class="h6 fw-bold mb-3"><i class="bi bi-clock-history text-sa"></i> Your recent results</h2>
+      {% if recent %}
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead class="table-light">
+              <tr><th>When</th><th>Result</th><th>Confidence</th><th>Mode</th><th></th></tr>
+            </thead>
+            <tbody>
+              {% for r in recent %}
+                <tr>
+                  <td class="text-nowrap">{{ r.created_at|date:"d M Y, H:i" }}</td>
+                  <td>{{ r.label_display }}</td>
+                  <td>{{ r.confidence_percent }}%</td>
+                  <td>
+                    {% if r.is_demo %}<span class="badge bg-warning text-dark">DEMO</span>
+                    {% else %}<span class="badge bg-success">Model</span>{% endif %}
+                  </td>
+                  <td class="text-end">
+                    <a href="{% url 'ai_classification:result' r.pk %}" class="btn btn-outline-primary btn-sm">View</a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">No results yet. Upload a photo to try the classifier.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  "use strict";
+  var input = document.getElementById("id_image");
+  var preview = document.getElementById("classifyPreview");
+  if (!input || !preview) return;
+  input.addEventListener("change", function () {
+    var file = input.files[0];
+    if (!file) { preview.classList.add("d-none"); input.setCustomValidity(""); return; }
+    var tooBig = file.size > 5 * 1024 * 1024;
+    input.setCustomValidity(tooBig ? "Image must be 5 MB or smaller." : "");
+    if (tooBig) input.reportValidity();
+    preview.src = URL.createObjectURL(file);
+    preview.classList.remove("d-none");
+  });
+})();
+</script>
+{% endblock %}

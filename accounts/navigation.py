@@ -33,34 +33,46 @@ MENU_BOTTOM = [
     ("My Profile", "bi-person-circle", "accounts:profile"),
 ]
 
+MAP = ("Complaint Map", "bi-geo-alt", "waste_management:map")
+CLASSIFIER = ("Waste Classifier (Demo)", "bi-cpu", "ai_classification:classify")
+
 ROLE_MODULES = {
     "citizen": [
         ("Report Complaint", "bi-megaphone", "complaints:create"),
         ("My Complaints", "bi-list-check", "complaints:list"),
+        MAP,
+        CLASSIFIER,
         ("Training & Quizzes", "bi-mortarboard", None),
         ("Rewards", "bi-award", None),
         ("Marketplace", "bi-shop", None),
     ],
     "worker": [
         ("My Tasks", "bi-clipboard-check", "worker:task_list"),
+        MAP,
+        CLASSIFIER,
         ("Collection Schedule", "bi-calendar-event", None),
         ("Waste Movement", "bi-signpost-split", None),
     ],
     "municipal_admin": [
         ("Review Complaints", "bi-inbox", "admin_dashboard:queue"),
         ("Assign Workers", "bi-people", "admin_dashboard:workers"),
+        MAP,
         ("Ward Management", "bi-map", "waste_management:ward_list"),
+        CLASSIFIER,
         ("Collection Scheduling", "bi-calendar-event", None),
         ("Penalties", "bi-exclamation-octagon", None),
         ("Analytics", "bi-bar-chart-line", None),
     ],
     "health_officer": [
+        MAP,
+        CLASSIFIER,
         ("Inspections", "bi-clipboard2-pulse", None),
         ("Sanitation Reports", "bi-file-earmark-text", None),
         ("Penalties", "bi-exclamation-octagon", None),
         ("Analytics", "bi-bar-chart-line", None),
     ],
     "executive_officer": [
+        MAP,
         ("City Analytics", "bi-graph-up", None),
         ("Reports", "bi-file-earmark-bar-graph", None),
         ("Ward Performance", "bi-map", None),
@@ -68,17 +80,21 @@ ROLE_MODULES = {
     "super_admin": [
         ("Review Complaints", "bi-inbox", "admin_dashboard:queue"),
         ("Workers", "bi-people", "admin_dashboard:workers"),
+        MAP,
         ("User Management", "bi-person-gear", None),
         ("Ward Management", "bi-map", "waste_management:ward_list"),
+        CLASSIFIER,
         ("System Settings", "bi-gear", None),
         ("Reports", "bi-file-earmark-bar-graph", None),
     ],
     "green_champion": [
+        CLASSIFIER,
         ("Community Monitoring", "bi-binoculars", None),
         ("Training & Quizzes", "bi-mortarboard", None),
         ("Rewards", "bi-award", None),
     ],
     "bulk_generator": [
+        CLASSIFIER,
         ("Bulk Pickups", "bi-box-seam", None),
         ("Waste Records", "bi-journal-text", None),
         ("Compliance", "bi-patch-check", None),

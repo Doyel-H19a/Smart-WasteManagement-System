@@ -15,6 +15,7 @@ urlpatterns = [
     path("notifications/", include("notifications.urls")),
     path("manage/", include("admin_dashboard.urls")),
     path("worker/", include("worker.urls")),
+    path("ai/", include("ai_classification.urls")),
 ]
 
 # Serve uploaded media files only during local development.

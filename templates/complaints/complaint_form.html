@@ -3,6 +3,13 @@
 {% block title %}Report a Complaint – SwachhAI{% endblock %}
 {% block page_title %}Report a Complaint{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  #pickerMap { height: 300px; border-radius: .75rem; border: 1px solid var(--sa-border); }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
   <div class="col-xl-9">
@@ -27,11 +34,16 @@
           <div class="col-md-6">{% include "partials/form_field.html" with field=form.longitude %}</div>
         </div>
 
-        <div class="mb-3">
+        <div class="mb-2">
           <button type="button" class="btn btn-outline-primary btn-sm" id="useLocation">
             <i class="bi bi-geo-alt"></i> Use my current location
           </button>
           <span class="small text-muted ms-2" id="locationStatus" aria-live="polite"></span>
+        </div>
+
+        <div class="mb-3">
+          <div class="form-text mb-1">Or click on the map to mark the exact spot (optional).</div>
+          <div id="pickerMap" role="application" aria-label="Map for choosing the complaint location"></div>
         </div>
 
         {% include "partials/form_field.html" with field=form.image %}
@@ -48,16 +60,57 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function () {
   "use strict";
 
-  // "Use my current location" button (works on localhost and HTTPS)
-  var button = document.getElementById("useLocation");
   var lat = document.getElementById("id_latitude");
   var lon = document.getElementById("id_longitude");
   var status = document.getElementById("locationStatus");
+  var mapEl = document.getElementById("pickerMap");
 
+  // ----- Location picker map (Leaflet + OpenStreetMap) -----
+  var map = null;
+  var marker = null;
+
+  function setMarker(la, lo, pan) {
+    if (!map) return;
+    if (marker) { marker.setLatLng([la, lo]); }
+    else { marker = L.marker([la, lo]).addTo(map); }
+    if (pan) { map.setView([la, lo], Math.max(map.getZoom(), 16)); }
+  }
+
+  function markerFromInputs(pan) {
+    var la = parseFloat(lat.value), lo = parseFloat(lon.value);
+    if (!isNaN(la) && !isNaN(lo) && la >= -90 && la <= 90 && lo >= -180 && lo <= 180) {
+      setMarker(la, lo, pan);
+    }
+  }
+
+  if (typeof L === "undefined") {
+    mapEl.innerHTML = '<p class="p-3 text-muted small mb-0">The map could not be loaded. You can still type the coordinates or leave them empty.</p>';
+  } else {
+    map = L.map("pickerMap").setView([22.5726, 88.3639], 12);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    map.on("click", function (e) {
+      lat.value = e.latlng.lat.toFixed(6);
+      lon.value = e.latlng.lng.toFixed(6);
+      setMarker(e.latlng.lat, e.latlng.lng, false);
+      status.textContent = "Location set from the map.";
+    });
+
+    lat.addEventListener("change", function () { markerFromInputs(true); });
+    lon.addEventListener("change", function () { markerFromInputs(true); });
+    markerFromInputs(true); // restore the marker after a failed submit
+  }
+
+  // ----- "Use my current location" (works on localhost and HTTPS) -----
+  var button = document.getElementById("useLocation");
   if (button) {
     if (!navigator.geolocation) {
       button.disabled = true;
@@ -69,10 +122,11 @@
           function (position) {
             lat.value = position.coords.latitude.toFixed(6);
             lon.value = position.coords.longitude.toFixed(6);
+            setMarker(position.coords.latitude, position.coords.longitude, true);
             status.textContent = "Location added.";
           },
           function () {
-            status.textContent = "Could not get your location. You can leave these fields empty.";
+            status.textContent = "Could not get your location. You can click the map instead.";
           },
           { enableHighAccuracy: true, timeout: 10000 }
         );
@@ -80,7 +134,7 @@
     }
   }
 
-  // Image preview and client-side size check (5 MB)
+  // ----- Image preview and client-side size check (5 MB) -----
   var input = document.getElementById("id_image");
   var preview = document.getElementById("imagePreview");
   if (input && preview) {
