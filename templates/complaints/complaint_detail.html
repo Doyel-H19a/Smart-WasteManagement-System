@@ -7,11 +7,16 @@
 <div class="mb-3">
   <a href="{% if is_owner %}{% url 'complaints:list' %}{% else %}{% url 'accounts:dashboard' %}{% endif %}"
      class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+  {% if user.role == 'municipal_admin' or user.role == 'super_admin' %}
+    <a href="{% url 'admin_dashboard:complaint_detail' complaint.pk %}" class="btn btn-sm btn-primary ms-1">
+      <i class="bi bi-gear"></i> Open in review console
+    </a>
+  {% endif %}
 </div>
 
 <div class="row g-4">
   <div class="col-lg-8">
-    <div class="card-sa p-4">
+    <div class="card-sa p-4 mb-4">
       <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
         <h2 class="h4 mb-0">{{ complaint.title }}</h2>
         {% include "complaints/_status_badge.html" %}
@@ -36,6 +41,15 @@
           <dd class="col-sm-9">{{ complaint.citizen.display_name }} ({{ complaint.citizen.phone_number|default:"no phone" }})</dd>
         {% endif %}
         <dt class="col-sm-3">Submitted on</dt><dd class="col-sm-9">{{ complaint.created_at|date:"d M Y, H:i" }}</dd>
+        {% if complaint.assigned_worker %}
+          <dt class="col-sm-3">Assigned worker</dt><dd class="col-sm-9">{{ complaint.assigned_worker.display_name }}</dd>
+        {% endif %}
+        {% if complaint.admin_note and not is_owner %}
+          <dt class="col-sm-3">Instructions</dt><dd class="col-sm-9">{{ complaint.admin_note }}</dd>
+        {% endif %}
+        {% if complaint.resolved_at %}
+          <dt class="col-sm-3">Resolved on</dt><dd class="col-sm-9">{{ complaint.resolved_at|date:"d M Y, H:i" }}</dd>
+        {% endif %}
       </dl>
 
       <h3 class="h6 fw-bold">Description</h3>
@@ -47,6 +61,17 @@
              style="max-height: 420px;" alt="Photo attached to complaint {{ complaint.reference }}">
       {% endif %}
     </div>
+
+    {% if complaint.proof_image or complaint.completion_note %}
+      <div class="card-sa p-4">
+        <h3 class="h6 fw-bold mb-3"><i class="bi bi-patch-check text-sa"></i> Work completed</h3>
+        {% if complaint.completion_note %}<p>{{ complaint.completion_note|linebreaksbr }}</p>{% endif %}
+        {% if complaint.proof_image %}
+          <img src="{{ complaint.proof_image.url }}" class="img-fluid rounded border"
+               style="max-height: 420px;" alt="Proof of completion for complaint {{ complaint.reference }}">
+        {% endif %}
+      </div>
+    {% endif %}
   </div>
 
   <div class="col-lg-4">

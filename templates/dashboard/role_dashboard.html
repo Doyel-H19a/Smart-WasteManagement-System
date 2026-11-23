@@ -68,6 +68,128 @@
   </div>
 {% endif %}
 
+{% if admin_summary %}
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-xl">
+      <div class="card-sa p-3 text-center">
+        <div class="display-6 fw-bold text-sa">{{ admin_summary.submitted }}</div>
+        <div class="small text-muted">New</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl">
+      <div class="card-sa p-3 text-center">
+        <div class="display-6 fw-bold text-sa">{{ admin_summary.under_review }}</div>
+        <div class="small text-muted">Under review</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl">
+      <div class="card-sa p-3 text-center">
+        <div class="display-6 fw-bold text-sa">{{ admin_summary.in_progress }}</div>
+        <div class="small text-muted">With workers</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl">
+      <div class="card-sa p-3 text-center">
+        <div class="display-6 fw-bold text-sa">{{ admin_summary.awaiting_verification }}</div>
+        <div class="small text-muted">To verify</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl">
+      <div class="card-sa p-3 text-center">
+        <div class="display-6 fw-bold text-sa">{{ admin_summary.resolved }}</div>
+        <div class="small text-muted">Resolved</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-sa p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="h6 fw-bold mb-0"><i class="bi bi-inbox text-sa"></i> Needs your action</h3>
+      <a href="{% url 'admin_dashboard:queue' %}" class="btn btn-outline-primary btn-sm">All complaints</a>
+    </div>
+    {% if admin_summary.needs_action %}
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr><th>Ref</th><th>Title</th><th>Ward</th><th>Status</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for c in admin_summary.needs_action %}
+              <tr>
+                <td class="text-nowrap">{{ c.reference }}</td>
+                <td>{{ c.title }}</td>
+                <td>{{ c.ward }}</td>
+                <td>{% include "complaints/_status_badge.html" with complaint=c %}</td>
+                <td class="text-end"><a href="{% url 'admin_dashboard:complaint_detail' c.pk %}" class="btn btn-primary btn-sm">Open</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-muted mb-0">Nothing needs your action right now.</p>
+    {% endif %}
+  </div>
+{% endif %}
+
+{% if worker_summary %}
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="card-sa p-3 text-center">
+        <div class="display-6 fw-bold text-sa">{{ worker_summary.to_accept }}</div>
+        <div class="small text-muted">To accept</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card-sa p-3 text-center">
+        <div class="display-6 fw-bold text-sa">{{ worker_summary.in_progress }}</div>
+        <div class="small text-muted">In progress</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card-sa p-3 text-center">
+        <div class="display-6 fw-bold text-sa">{{ worker_summary.awaiting_verification }}</div>
+        <div class="small text-muted">Awaiting verification</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card-sa p-3 text-center">
+        <div class="display-6 fw-bold text-sa">{{ worker_summary.verified }}</div>
+        <div class="small text-muted">Verified</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-sa p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="h6 fw-bold mb-0"><i class="bi bi-clipboard-check text-sa"></i> Your active tasks</h3>
+      <a href="{% url 'worker:task_list' %}" class="btn btn-outline-primary btn-sm">All tasks</a>
+    </div>
+    {% if worker_summary.tasks %}
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr><th>Ref</th><th>Task</th><th>Ward</th><th>Status</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for c in worker_summary.tasks %}
+              <tr>
+                <td class="text-nowrap">{{ c.reference }}</td>
+                <td>{{ c.title }}</td>
+                <td>{{ c.ward }}</td>
+                <td>{% include "complaints/_status_badge.html" with complaint=c %}</td>
+                <td class="text-end"><a href="{% url 'worker:task_detail' c.pk %}" class="btn btn-primary btn-sm">Open</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-muted mb-0">You have no active tasks.</p>
+    {% endif %}
+  </div>
+{% endif %}
+
 <div class="row g-4">
   <div class="col-md-6 col-xl-4">
     <div class="card-sa p-4 h-100">
@@ -103,7 +225,7 @@
       <ul class="list-unstyled small mb-0">
         <li class="mb-2"><i class="bi bi-check-circle-fill text-success"></i> Phase 1: Foundation and authentication</li>
         <li class="mb-2"><i class="bi bi-check-circle-fill text-success"></i> Phase 2: Wards, complaints, notifications</li>
-        <li class="mb-2 text-muted"><i class="bi bi-circle"></i> Phase 3: Complaint workflow (assign, accept, proof, verify)</li>
+        <li class="mb-2"><i class="bi bi-check-circle-fill text-success"></i> Phase 3: Complaint workflow</li>
         <li class="mb-2 text-muted"><i class="bi bi-circle"></i> Later: AI interface, maps, analytics…</li>
       </ul>
     </div>

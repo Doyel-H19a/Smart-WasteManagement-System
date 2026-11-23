@@ -42,13 +42,13 @@ ROLE_MODULES = {
         ("Marketplace", "bi-shop", None),
     ],
     "worker": [
-        ("My Tasks", "bi-clipboard-check", None),
+        ("My Tasks", "bi-clipboard-check", "worker:task_list"),
         ("Collection Schedule", "bi-calendar-event", None),
         ("Waste Movement", "bi-signpost-split", None),
     ],
     "municipal_admin": [
-        ("Review Complaints", "bi-inbox", None),
-        ("Assign Workers", "bi-people", None),
+        ("Review Complaints", "bi-inbox", "admin_dashboard:queue"),
+        ("Assign Workers", "bi-people", "admin_dashboard:workers"),
         ("Ward Management", "bi-map", "waste_management:ward_list"),
         ("Collection Scheduling", "bi-calendar-event", None),
         ("Penalties", "bi-exclamation-octagon", None),
@@ -66,7 +66,9 @@ ROLE_MODULES = {
         ("Ward Performance", "bi-map", None),
     ],
     "super_admin": [
-        ("User Management", "bi-people", None),
+        ("Review Complaints", "bi-inbox", "admin_dashboard:queue"),
+        ("Workers", "bi-people", "admin_dashboard:workers"),
+        ("User Management", "bi-person-gear", None),
         ("Ward Management", "bi-map", "waste_management:ward_list"),
         ("System Settings", "bi-gear", None),
         ("Reports", "bi-file-earmark-bar-graph", None),

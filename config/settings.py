@@ -31,6 +31,8 @@ INSTALLED_APPS = [
     "waste_management",
     "complaints",
     "notifications",
+    "admin_dashboard",
+    "worker",
 ]
 
 MIDDLEWARE = [

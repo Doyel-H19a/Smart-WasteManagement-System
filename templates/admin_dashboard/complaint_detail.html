@@ -1,0 +1,162 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}{{ complaint.reference }} – Review – SwachhAI{% endblock %}
+{% block page_title %}Review {{ complaint.reference }}{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+  <a href="{% url 'admin_dashboard:queue' %}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Back to complaints
+  </a>
+</div>
+
+<div class="row g-4">
+  <!-- Left column: complaint details -->
+  <div class="col-lg-7">
+    <div class="card-sa p-4 mb-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+        <h2 class="h4 mb-0">{{ complaint.title }}</h2>
+        {% include "complaints/_status_badge.html" %}
+      </div>
+
+      <dl class="row small mb-3">
+        <dt class="col-sm-4">Category</dt><dd class="col-sm-8">{{ complaint.get_category_display }}</dd>
+        <dt class="col-sm-4">Ward</dt><dd class="col-sm-8">{{ complaint.ward }}</dd>
+        <dt class="col-sm-4">Location</dt><dd class="col-sm-8">{{ complaint.address }}</dd>
+        {% if complaint.latitude and complaint.longitude %}
+          <dt class="col-sm-4">Coordinates</dt>
+          <dd class="col-sm-8">
+            {{ complaint.latitude }}, {{ complaint.longitude }} &middot;
+            <a href="https://www.openstreetmap.org/?mlat={{ complaint.latitude }}&amp;mlon={{ complaint.longitude }}#map=17/{{ complaint.latitude }}/{{ complaint.longitude }}"
+               target="_blank" rel="noopener noreferrer">OpenStreetMap</a>
+          </dd>
+        {% endif %}
+        <dt class="col-sm-4">Priority</dt><dd class="col-sm-8">{{ complaint.get_priority_display }}</dd>
+        <dt class="col-sm-4">Reported by</dt>
+        <dd class="col-sm-8">{{ complaint.citizen.display_name }} ({{ complaint.citizen.phone_number|default:"no phone" }})</dd>
+        <dt class="col-sm-4">Submitted on</dt><dd class="col-sm-8">{{ complaint.created_at|date:"d M Y, H:i" }}</dd>
+        {% if complaint.assigned_worker %}
+          <dt class="col-sm-4">Assigned worker</dt>
+          <dd class="col-sm-8">{{ complaint.assigned_worker.display_name }}
+            {% if complaint.assigned_at %}<span class="text-muted">(since {{ complaint.assigned_at|date:"d M Y, H:i" }})</span>{% endif %}
+          </dd>
+        {% endif %}
+        {% if complaint.admin_note %}
+          <dt class="col-sm-4">Instructions given</dt><dd class="col-sm-8">{{ complaint.admin_note }}</dd>
+        {% endif %}
+      </dl>
+
+      <h3 class="h6 fw-bold">Description</h3>
+      <p>{{ complaint.description|linebreaksbr }}</p>
+
+      {% if complaint.image %}
+        <h3 class="h6 fw-bold">Citizen's photo</h3>
+        <img src="{{ complaint.image.url }}" class="img-fluid rounded border"
+             style="max-height: 320px;" alt="Photo attached to complaint {{ complaint.reference }}">
+      {% endif %}
+    </div>
+
+    {% if complaint.proof_image or complaint.completion_note %}
+      <div class="card-sa p-4">
+        <h3 class="h6 fw-bold mb-3"><i class="bi bi-patch-check text-sa"></i> Worker's completion report</h3>
+        {% if complaint.completion_note %}<p>{{ complaint.completion_note|linebreaksbr }}</p>{% endif %}
+        {% if complaint.completed_at %}
+          <p class="small text-muted">Completed on {{ complaint.completed_at|date:"d M Y, H:i" }}</p>
+        {% endif %}
+        {% if complaint.proof_image %}
+          <img src="{{ complaint.proof_image.url }}" class="img-fluid rounded border"
+               style="max-height: 320px;" alt="Proof of completion for {{ complaint.reference }}">
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Right column: actions and timeline -->
+  <div class="col-lg-5">
+    <div class="card-sa p-4 mb-4">
+      <h3 class="h6 fw-bold mb-3"><i class="bi bi-lightning-charge text-sa"></i> Actions</h3>
+
+      {% if complaint.status == 'submitted' %}
+        <p class="small text-muted">This is a new complaint. Start a review to begin handling it.</p>
+        <form method="post" action="{% url 'admin_dashboard:start_review' complaint.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Start review</button>
+        </form>
+
+      {% elif complaint.status == 'under_review' or complaint.status == 'assigned' %}
+        <p class="small text-muted">
+          {% if complaint.status == 'assigned' %}
+            Waiting for {{ complaint.assigned_worker.display_name }} to accept. You can reassign below.
+          {% else %}
+            Choose a worker for this complaint.
+          {% endif %}
+        </p>
+        <form method="post" action="{% url 'admin_dashboard:assign' complaint.pk %}" class="needs-validation" novalidate>
+          {% csrf_token %}
+          {% include "partials/form_field.html" with field=assign_form.worker %}
+          {% include "partials/form_field.html" with field=assign_form.priority %}
+          {% include "partials/form_field.html" with field=assign_form.instructions %}
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-person-check"></i> {% if complaint.status == 'assigned' %}Reassign worker{% else %}Assign worker{% endif %}
+          </button>
+        </form>
+
+      {% elif complaint.status == 'accepted' %}
+        <div class="alert alert-info mb-0">
+          {{ complaint.assigned_worker.display_name }} accepted the task and is working on it.
+        </div>
+
+      {% elif complaint.status == 'completed' %}
+        <p class="small text-muted">Review the worker's proof on the left, then verify or send the task back.</p>
+        <form method="post" action="{% url 'admin_dashboard:verify' complaint.pk %}" class="needs-validation" novalidate>
+          {% csrf_token %}
+          {% include "partials/form_field.html" with field=verify_form.note %}
+          <button type="submit" class="btn btn-success w-100"><i class="bi bi-check2-circle"></i> Verify and resolve</button>
+        </form>
+        <hr>
+        <form method="post" action="{% url 'admin_dashboard:rework' complaint.pk %}" class="needs-validation" novalidate>
+          {% csrf_token %}
+          {% include "partials/form_field.html" with field=rework_form.reason %}
+          <button type="submit" class="btn btn-outline-warning w-100"><i class="bi bi-arrow-counterclockwise"></i> Send back for rework</button>
+        </form>
+
+      {% elif complaint.status == 'resolved' %}
+        <div class="alert alert-success mb-0">This complaint is resolved.</div>
+
+      {% else %}
+        <div class="alert alert-secondary mb-0">This complaint was rejected. No further action is possible.</div>
+      {% endif %}
+    </div>
+
+    {% if complaint.status == 'submitted' or complaint.status == 'under_review' %}
+      <div class="card-sa p-4 mb-4">
+        <h3 class="h6 fw-bold mb-3 text-danger"><i class="bi bi-x-octagon"></i> Reject complaint</h3>
+        <form method="post" action="{% url 'admin_dashboard:reject' complaint.pk %}" class="needs-validation" novalidate>
+          {% csrf_token %}
+          {% include "partials/form_field.html" with field=reject_form.reason %}
+          <button type="submit" class="btn btn-outline-danger w-100">Reject</button>
+        </form>
+      </div>
+    {% endif %}
+
+    <div class="card-sa p-4">
+      <h3 class="h6 fw-bold mb-3"><i class="bi bi-clock-history text-sa"></i> Status timeline</h3>
+      <ul class="list-group list-group-flush">
+        {% for entry in history %}
+          <li class="list-group-item px-0">
+            <span class="badge {% if entry.status == 'resolved' %}bg-success{% elif entry.status == 'rejected' %}bg-danger{% else %}bg-secondary{% endif %}">
+              {{ entry.get_status_display }}
+            </span>
+            <div class="small text-muted mt-1">
+              {{ entry.created_at|date:"d M Y, H:i" }}{% if entry.changed_by %} &middot; {{ entry.changed_by.display_name }}{% endif %}
+            </div>
+            {% if entry.note %}<div class="small mt-1">{{ entry.note }}</div>{% endif %}
+          </li>
+        {% empty %}
+          <li class="list-group-item px-0 text-muted small">No history yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

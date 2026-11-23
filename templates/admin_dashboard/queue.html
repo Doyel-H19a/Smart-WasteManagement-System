@@ -1,0 +1,70 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Review Complaints – SwachhAI{% endblock %}
+{% block page_title %}Review Complaints{% endblock %}
+
+{% block content %}
+<div class="card-sa p-3 p-md-4">
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+      <input type="search" name="q" value="{{ q }}" class="form-control"
+             placeholder="Search title, address or citizen" aria-label="Search complaints">
+    </div>
+    <div class="col-md-3">
+      <select name="status" class="form-select" aria-label="Filter by status">
+        <option value="">All statuses</option>
+        {% for value, label in status_choices %}
+          <option value="{{ value }}"{% if value == selected_status %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <select name="ward" class="form-select" aria-label="Filter by ward">
+        <option value="">All wards</option>
+        {% for w in wards %}
+          <option value="{{ w.pk }}"{% if selected_ward == w.pk|stringformat:"s" %} selected{% endif %}>{{ w }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 d-flex gap-2">
+      <button type="submit" class="btn btn-outline-primary flex-grow-1">Filter</button>
+      <a href="{% url 'admin_dashboard:queue' %}" class="btn btn-outline-secondary">Reset</a>
+    </div>
+  </form>
+
+  {% if page_obj.object_list %}
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Ref</th><th>Title</th><th>Ward</th><th>Citizen</th>
+            <th>Status</th><th>Worker</th><th>Submitted</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in page_obj %}
+            <tr>
+              <td class="text-nowrap">{{ c.reference }}</td>
+              <td>{{ c.title }}</td>
+              <td>{{ c.ward }}</td>
+              <td>{{ c.citizen.display_name }}</td>
+              <td>{% include "complaints/_status_badge.html" with complaint=c %}</td>
+              <td>{{ c.assigned_worker.display_name|default:"–" }}</td>
+              <td class="text-nowrap">{{ c.created_at|date:"d M Y, H:i" }}</td>
+              <td class="text-end">
+                <a href="{% url 'admin_dashboard:complaint_detail' c.pk %}" class="btn btn-primary btn-sm">Open</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include "partials/pagination.html" %}
+  {% else %}
+    <div class="text-center text-muted py-5">
+      <i class="bi bi-inbox fs-1"></i>
+      <p class="mt-2 mb-0">No complaints match your filters.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

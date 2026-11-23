@@ -73,6 +73,26 @@ class Complaint(models.Model):
     image = models.ImageField("photo", upload_to="complaints/%Y/%m/", blank=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.SUBMITTED)
     priority = models.CharField(max_length=10, choices=Priority.choices, default=Priority.MEDIUM)
+
+    # --- Workflow fields (added in Phase 3) ---------------------------------
+    assigned_worker = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="assigned_complaints", limit_choices_to={"role": "worker"},
+    )
+    assigned_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="+",
+    )
+    assigned_at = models.DateTimeField(null=True, blank=True)
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    admin_note = models.TextField("instructions for worker", blank=True)
+    completion_note = models.TextField("worker's completion note", blank=True)
+    proof_image = models.ImageField(
+        "proof of completion", upload_to="proofs/%Y/%m/", blank=True
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -81,6 +101,7 @@ class Complaint(models.Model):
         indexes = [
             models.Index(fields=["status", "-created_at"]),
             models.Index(fields=["citizen", "-created_at"]),
+            models.Index(fields=["assigned_worker", "status"]),
         ]
 
     def __str__(self):

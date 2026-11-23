@@ -5,7 +5,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.shortcuts import redirect, render
 
-from complaints.services import get_citizen_summary
+from complaints.services import (
+    get_admin_summary,
+    get_citizen_summary,
+    get_worker_summary,
+)
 
 from .forms import LoginForm, ProfileForm, RegistrationForm
 from .models import User
@@ -45,7 +49,7 @@ def register_view(request):
 
 @login_required
 def dashboard_view(request):
-    """Role-aware dashboard. Citizens also see their complaint statistics."""
+    """Role-aware dashboard. Citizens, admins and workers also see live statistics."""
     user = request.user
     context = {
         "page_title": f"{user.get_role_display()} Dashboard",
@@ -54,6 +58,10 @@ def dashboard_view(request):
     }
     if user.role == User.Role.CITIZEN:
         context["complaint_summary"] = get_citizen_summary(user)
+    elif user.role in (User.Role.MUNICIPAL_ADMIN, User.Role.SUPER_ADMIN):
+        context["admin_summary"] = get_admin_summary()
+    elif user.role == User.Role.WORKER:
+        context["worker_summary"] = get_worker_summary(user)
     return render(request, "dashboard/role_dashboard.html", context)
 
 

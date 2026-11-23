@@ -1,0 +1,39 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Workers – SwachhAI{% endblock %}
+{% block page_title %}Workers{% endblock %}
+
+{% block content %}
+<div class="card-sa p-3 p-md-4">
+  <p class="text-muted small">
+    Workload of every active waste worker. Assign workers from a complaint's review page.
+  </p>
+  {% if workers %}
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Worker</th><th>Phone</th><th class="text-center">Waiting to accept</th>
+            <th class="text-center">In progress</th><th class="text-center">Awaiting verification</th>
+            <th class="text-center">Resolved</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for w in workers %}
+            <tr>
+              <td>{{ w.display_name }} <span class="text-muted small">@{{ w.username }}</span></td>
+              <td>{{ w.phone_number|default:"–" }}</td>
+              <td class="text-center">{{ w.pending_accept }}</td>
+              <td class="text-center">{{ w.in_progress }}</td>
+              <td class="text-center">{{ w.awaiting_verification }}</td>
+              <td class="text-center">{{ w.resolved }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-muted mb-0">There are no active workers yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

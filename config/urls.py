@@ -13,6 +13,8 @@ urlpatterns = [
     path("wards/", include("waste_management.urls")),
     path("complaints/", include("complaints.urls")),
     path("notifications/", include("notifications.urls")),
+    path("manage/", include("admin_dashboard.urls")),
+    path("worker/", include("worker.urls")),
 ]
 
 # Serve uploaded media files only during local development.
